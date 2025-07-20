@@ -52,12 +52,14 @@ EOF
 # 5. 안전성 체크 (API 키 패턴 검색)
 echo "🔍 안전성 검사 중..."
 
-if grep -r "sk-proj" . --exclude-dir=.git; then
+# API 키 패턴을 안전하게 검색
+API_PREFIX="s""k""-"
+if grep -r "${API_PREFIX}proj" . --exclude-dir=.git; then
     echo "❌ 경고: API 키 패턴 발견!"
     exit 1
 fi
 
-if grep -r "sk-[a-zA-Z0-9]" . --exclude-dir=.git; then
+if grep -r "${API_PREFIX}[a-zA-Z0-9]" . --exclude-dir=.git; then
     echo "❌ 경고: OpenAI 키 패턴 발견!"
     exit 1
 fi
