@@ -590,6 +590,10 @@
 • 🔷 이더리움 (ETH/KRW)
 • 🚗 테슬라 (TSLA/USD)
 • 🔍 구글 (GOOGL/USD)
+• 🖥️ 엔비디아 (NVDA/USD)
+• ⚡ 뉴스케일파워 (SMR/USD)
+• 🏢 네비우스그룹 (NBVAF/USD)
+• 💾 마이크론 (MU/USD)
 
 📊 종목별 독립적 분석:
 • 각각의 기술적 지표
@@ -606,6 +610,18 @@
                 </button>
                 <button class="coin-btn" id="googlBtn" onclick="selectCoin('GOOGL')">
                     <span class="coin-icon">🔍</span>구글
+                </button>
+                <button class="coin-btn" id="nvdaBtn" onclick="selectCoin('NVDA')">
+                    <span class="coin-icon">🖥️</span>엔비디아
+                </button>
+                <button class="coin-btn" id="smrBtn" onclick="selectCoin('SMR')">
+                    <span class="coin-icon">⚡</span>뉴스케일파워
+                </button>
+                <button class="coin-btn" id="nbvafBtn" onclick="selectCoin('NBVAF')">
+                    <span class="coin-icon">🏢</span>네비우스그룹
+                </button>
+                <button class="coin-btn" id="muBtn" onclick="selectCoin('MU')">
+                    <span class="coin-icon">💾</span>마이크론
                 </button>
             </div>
             
@@ -1009,6 +1025,42 @@
                 color: '#4285f4',
                 type: 'stock',
                 currency: 'USD'
+            },
+            'NVDA': {
+                name: '엔비디아',
+                symbol: 'NVDA',
+                market: 'NVDA',
+                icon: '🖥️',
+                color: '#76b900',
+                type: 'stock',
+                currency: 'USD'
+            },
+            'SMR': {
+                name: '뉴스케일파워',
+                symbol: 'SMR',
+                market: 'SMR',
+                icon: '⚡',
+                color: '#ff6b35',
+                type: 'stock',
+                currency: 'USD'
+            },
+            'NBVAF': {
+                name: '네비우스그룹',
+                symbol: 'NBVAF',
+                market: 'NBVAF',
+                icon: '🏢',
+                color: '#0066cc',
+                type: 'stock',
+                currency: 'USD'
+            },
+            'MU': {
+                name: '마이크론',
+                symbol: 'MU',
+                market: 'MU',
+                icon: '💾',
+                color: '#9b59b6',
+                type: 'stock',
+                currency: 'USD'
             }
         };
         
@@ -1104,6 +1156,10 @@
             document.getElementById('ethBtn').classList.remove('active');
             document.getElementById('tslaBtn').classList.remove('active');
             document.getElementById('googlBtn').classList.remove('active');
+            document.getElementById('nvdaBtn').classList.remove('active');
+            document.getElementById('smrBtn').classList.remove('active');
+            document.getElementById('nbvafBtn').classList.remove('active');
+            document.getElementById('muBtn').classList.remove('active');
             
             // 새로운 선택 활성화
             const btnId = coin.toLowerCase() + 'Btn';
@@ -1808,7 +1864,15 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     } catch (error) {
                         // Yahoo Finance API 실패시 모의 데이터 사용
                         console.warn('Yahoo Finance API 실패, 모의 데이터 사용:', error);
-                        const basePrice = currentCoin.symbol === 'TSLA' ? 250 : 150;
+                        const basePrices = {
+                            'TSLA': 250,    // 테슬라
+                            'GOOGL': 150,   // 구글
+                            'NVDA': 500,    // 엔비디아
+                            'SMR': 12,      // 뉴스케일파워
+                            'NBVAF': 15,    // 네비우스그룹
+                            'MU': 100       // 마이크론
+                        };
+                        const basePrice = basePrices[currentCoin.symbol] || 150;
                         reversedData = Array.from({length: 100}, (_, i) => {
                             const price = basePrice + Math.sin(i * 0.1) * 20 + Math.random() * 10;
                             return {

@@ -588,6 +588,12 @@
 💰 지원 종목:
 • 🟠 비트코인 (BTC/KRW)
 • 🔷 이더리움 (ETH/KRW)
+• 🚗 테슬라 (TSLA/USD)
+• 🔍 구글 (GOOGL/USD)
+• 🖥️ 엔비디아 (NVDA/USD)
+• ⚡ 뉴스케일파워 (SMR/USD)
+• 🏢 네비우스그룹 (NBVAF/USD)
+• 💾 마이크론 (MU/USD)
 
 📊 종목별 독립적 분석:
 • 각각의 기술적 지표
@@ -598,6 +604,24 @@
                 </button>
                 <button class="coin-btn" id="ethBtn" onclick="selectCoin('ETH')">
                     <span class="coin-icon">🔷</span>이더리움
+                </button>
+                <button class="coin-btn" id="tslaBtn" onclick="selectCoin('TSLA')">
+                    <span class="coin-icon">🚗</span>테슬라
+                </button>
+                <button class="coin-btn" id="googlBtn" onclick="selectCoin('GOOGL')">
+                    <span class="coin-icon">🔍</span>구글
+                </button>
+                <button class="coin-btn" id="nvdaBtn" onclick="selectCoin('NVDA')">
+                    <span class="coin-icon">🖥️</span>엔비디아
+                </button>
+                <button class="coin-btn" id="smrBtn" onclick="selectCoin('SMR')">
+                    <span class="coin-icon">⚡</span>뉴스케일파워
+                </button>
+                <button class="coin-btn" id="nbvafBtn" onclick="selectCoin('NBVAF')">
+                    <span class="coin-icon">🏢</span>네비우스그룹
+                </button>
+                <button class="coin-btn" id="muBtn" onclick="selectCoin('MU')">
+                    <span class="coin-icon">💾</span>마이크론
                 </button>
             </div>
             
@@ -1001,6 +1025,42 @@
                 color: '#4285f4',
                 type: 'stock',
                 currency: 'USD'
+            },
+            'NVDA': {
+                name: '엔비디아',
+                symbol: 'NVDA',
+                market: 'NVDA',
+                icon: '🖥️',
+                color: '#76b900',
+                type: 'stock',
+                currency: 'USD'
+            },
+            'SMR': {
+                name: '뉴스케일파워',
+                symbol: 'SMR',
+                market: 'SMR',
+                icon: '⚡',
+                color: '#ff6b35',
+                type: 'stock',
+                currency: 'USD'
+            },
+            'NBVAF': {
+                name: '네비우스그룹',
+                symbol: 'NBVAF',
+                market: 'NBVAF',
+                icon: '🏢',
+                color: '#0066cc',
+                type: 'stock',
+                currency: 'USD'
+            },
+            'MU': {
+                name: '마이크론',
+                symbol: 'MU',
+                market: 'MU',
+                icon: '💾',
+                color: '#9b59b6',
+                type: 'stock',
+                currency: 'USD'
             }
         };
         
@@ -1094,9 +1154,15 @@
             // 이전 선택 해제
             document.getElementById('btcBtn').classList.remove('active');
             document.getElementById('ethBtn').classList.remove('active');
+            document.getElementById('tslaBtn').classList.remove('active');
+            document.getElementById('googlBtn').classList.remove('active');
+            document.getElementById('nvdaBtn').classList.remove('active');
+            document.getElementById('smrBtn').classList.remove('active');
+            document.getElementById('nbvafBtn').classList.remove('active');
+            document.getElementById('muBtn').classList.remove('active');
             
             // 새로운 선택 활성화
-            const btnId = coin === 'BTC' ? 'btcBtn' : 'ethBtn';
+            const btnId = coin.toLowerCase() + 'Btn';
             document.getElementById(btnId).classList.add('active');
             
             // 선택된 코인 업데이트
