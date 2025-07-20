@@ -637,6 +637,7 @@
 💰 지원 종목:
 • 🟠 비트코인 (BTC/KRW)
 • 🔷 이더리움 (ETH/KRW)
+• 📱 삼성전자 (005930/KRW)
 • 🚗 테슬라 (TSLA/USD)
 • 🔍 구글 (GOOGL/USD)
 • 🖥️ 엔비디아 (NVDA/USD)
@@ -653,6 +654,9 @@
                 </button>
                 <button class="coin-btn" id="ethBtn" onclick="selectCoin('ETH')">
                     <span class="coin-icon">🔷</span>이더리움
+                </button>
+                <button class="coin-btn" id="samsungBtn" onclick="selectCoin('SAMSUNG')">
+                    <span class="coin-icon">📱</span>삼성전자
                 </button>
                 <button class="coin-btn" id="tslaBtn" onclick="selectCoin('TSLA')">
                     <span class="coin-icon">🚗</span>테슬라
@@ -1055,6 +1059,15 @@
                 icon: '🔷',
                 color: '#627eea',
                 type: 'crypto',
+                currency: 'KRW'
+            },
+            'SAMSUNG': {
+                name: '삼성전자',
+                symbol: '005930.KS',
+                market: '005930.KS',
+                icon: '📱',
+                color: '#1f4e79',
+                type: 'stock',
                 currency: 'KRW'
             },
             'TSLA': {
@@ -1914,6 +1927,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                         // Yahoo Finance API 실패시 모의 데이터 사용
                         console.warn('Yahoo Finance API 실패, 모의 데이터 사용:', error);
                         const basePrices = {
+                            'SAMSUNG': 70000,  // 삼성전자
                             'TSLA': 250,    // 테슬라
                             'GOOGL': 150,   // 구글
                             'NVDA': 500,    // 엔비디아

@@ -637,6 +637,7 @@
 💰 지원 종목:
 • 🟠 비트코인 (BTC/KRW)
 • 🔷 이더리움 (ETH/KRW)
+• 📱 삼성전자 (005930/KRW)
 • 🚗 테슬라 (TSLA/USD)
 • 🔍 구글 (GOOGL/USD)
 • 🖥️ 엔비디아 (NVDA/USD)
@@ -1914,6 +1915,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                         // Yahoo Finance API 실패시 모의 데이터 사용
                         console.warn('Yahoo Finance API 실패, 모의 데이터 사용:', error);
                         const basePrices = {
+                            'SAMSUNG': 70000,  // 삼성전자
                             'TSLA': 250,    // 테슬라
                             'GOOGL': 150,   // 구글
                             'NVDA': 500,    // 엔비디아
@@ -2223,7 +2225,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 } else {
                     // 주식: 모의 데이터 (실제로는 Yahoo Finance API 사용 가능)
                     const basePrices = {
-                        'TSLA': 250, 'GOOGL': 150, 'NVDA': 500,
+                        'SAMSUNG': 70000, 'TSLA': 250, 'GOOGL': 150, 'NVDA': 500,
                         'SMR': 12, 'NBVAF': 15, 'MU': 100
                     };
                     const basePrice = basePrices[symbol] || 150;
