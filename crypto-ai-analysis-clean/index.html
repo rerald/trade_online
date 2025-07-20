@@ -415,12 +415,61 @@
             background: transparent;
             color: #666;
             min-width: 80px;
+            position: relative;
+            overflow: hidden;
         }
         
         .coin-btn.active {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* 매매 신호별 배경색 */
+        .coin-btn.signal-strong-buy {
+            background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+            color: white;
+        }
+        
+        .coin-btn.signal-buy {
+            background: linear-gradient(135deg, #52c41a, #73d13d) !important;
+            color: white;
+        }
+        
+        .coin-btn.signal-weak-buy {
+            background: linear-gradient(135deg, #95de64, #b7eb8f) !important;
+            color: #333;
+        }
+        
+        .coin-btn.signal-hold {
+            background: linear-gradient(135deg, #ffd93d, #6bcf7f) !important;
+            color: #333;
+        }
+        
+        .coin-btn.signal-weak-sell {
+            background: linear-gradient(135deg, #ffa39e, #ff7875) !important;
+            color: white;
+        }
+        
+        .coin-btn.signal-sell {
+            background: linear-gradient(135deg, #ff4d4f, #f5222d) !important;
+            color: white;
+        }
+        
+        .coin-btn.signal-strong-sell {
+            background: linear-gradient(135deg, #cf1322, #a8071a) !important;
+            color: white;
+        }
+        
+        .coin-btn.active.signal-strong-buy,
+        .coin-btn.active.signal-buy,
+        .coin-btn.active.signal-weak-buy,
+        .coin-btn.active.signal-hold,
+        .coin-btn.active.signal-weak-sell,
+        .coin-btn.active.signal-sell,
+        .coin-btn.active.signal-strong-sell {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transform: translateY(-1px);
         }
         
         .coin-btn:hover:not(.active) {
@@ -2142,6 +2191,138 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             }
         }
         
+        // 신호 강도별 CSS 클래스 반환
+        function getSignalClass(signal, confidence) {
+            if (signal === '매수') {
+                if (confidence >= 85) return 'signal-strong-buy';
+                else if (confidence >= 70) return 'signal-buy';
+                else return 'signal-weak-buy';
+            } else if (signal === '매도') {
+                if (confidence >= 85) return 'signal-strong-sell';
+                else if (confidence >= 70) return 'signal-sell';
+                else return 'signal-weak-sell';
+            } else {
+                return 'signal-hold';
+            }
+        }
+        
+        // 종목별 신호 분석 (간소화된 버전)
+        async function analyzeSymbolSignal(symbol) {
+            try {
+                const coin = coinInfo[symbol];
+                if (!coin) return { signal: '관망', confidence: 50 };
+                
+                let response, data;
+                
+                if (coin.type === 'crypto') {
+                    // 암호화폐: 업비트 API
+                    response = await fetch(`https://api.upbit.com/v1/candles/days?market=${coin.market}&count=50`);
+                    if (!response.ok) throw new Error('API 호출 실패');
+                    data = await response.json();
+                    data = data.reverse();
+                } else {
+                    // 주식: 모의 데이터 (실제로는 Yahoo Finance API 사용 가능)
+                    const basePrices = {
+                        'TSLA': 250, 'GOOGL': 150, 'NVDA': 500,
+                        'SMR': 12, 'NBVAF': 15, 'MU': 100
+                    };
+                    const basePrice = basePrices[symbol] || 150;
+                    
+                    data = Array.from({length: 50}, (_, i) => ({
+                        trade_price: basePrice + Math.sin(i * 0.1) * 20 + Math.random() * 10,
+                        high_price: 0, low_price: 0,
+                        candle_acc_trade_volume: Math.floor(Math.random() * 1000000)
+                    }));
+                    
+                    data.forEach(item => {
+                        item.high_price = item.trade_price * 1.02;
+                        item.low_price = item.trade_price * 0.98;
+                    });
+                }
+                
+                const prices = data.map(item => item.trade_price);
+                const highs = data.map(item => item.high_price);
+                const lows = data.map(item => item.low_price);
+                const volumes = data.map(item => item.candle_acc_trade_volume);
+                
+                // 기술적 지표 계산
+                const rsi = calculateRSI(prices);
+                const ma5 = calculateMA(prices, 5);
+                const ma20 = calculateMA(prices, 20);
+                const ma60 = calculateMA(prices, 60);
+                const macd = calculateMACD(prices);
+                const bb = calculateBollingerBands(prices);
+                const atr = calculateATR(highs, lows, prices);
+                const divergenceRate = calculateDivergenceRate(prices, ma20);
+                const divergence = detectDivergence(prices, rsi);
+                
+                // 신호 분석
+                const analysisData = {
+                    price: prices[prices.length - 1],
+                    prices: prices,
+                    rsi: rsi[rsi.length - 1],
+                    ma5: ma5,
+                    ma20: ma20,
+                    ma60: ma60,
+                    macd: macd,
+                    bb: bb,
+                    volumes: volumes,
+                    atr: atr,
+                    divergenceRate: divergenceRate,
+                    divergence: divergence
+                };
+                
+                return analyzeAdvancedSignal(analysisData);
+                
+            } catch (error) {
+                console.warn(`${symbol} 신호 분석 실패:`, error);
+                return { signal: '관망', confidence: 50 };
+            }
+        }
+        
+        // 모든 종목의 버튼 색상 업데이트
+        async function updateAllSignalColors() {
+            const symbols = Object.keys(coinInfo);
+            
+            for (const symbol of symbols) {
+                try {
+                    const analysis = await analyzeSymbolSignal(symbol);
+                    const btnId = symbol.toLowerCase() + 'Btn';
+                    const btn = document.getElementById(btnId);
+                    
+                    if (btn) {
+                        // 기존 신호 클래스 제거
+                        btn.classList.remove('signal-strong-buy', 'signal-buy', 'signal-weak-buy', 
+                                           'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell');
+                        
+                        // 새로운 신호 클래스 추가
+                        const signalClass = getSignalClass(analysis.signal, analysis.confidence);
+                        btn.classList.add(signalClass);
+                        
+                        // 툴팁에 신호 정보 추가
+                        const originalTitle = btn.getAttribute('data-original-tooltip') || btn.title || '';
+                        const signalInfo = `\n\n📊 현재 신호: ${analysis.signal} (${analysis.confidence}%)`;
+                        btn.title = originalTitle + signalInfo;
+                        
+                        if (!btn.getAttribute('data-original-tooltip')) {
+                            btn.setAttribute('data-original-tooltip', originalTitle);
+                        }
+                    }
+                    
+                    // API 호출 간격을 두어 과부하 방지
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                } catch (error) {
+                    console.warn(`${symbol} 색상 업데이트 실패:`, error);
+                }
+            }
+            
+            console.log('✅ 모든 종목 신호 색상 업데이트 완료');
+        }
+        
+        // 신호 색상 업데이트 간격 (5분마다)
+        let signalUpdateInterval;
+        
         // API 키 관리 함수들
         function openApiModal() {
             document.getElementById('apiModal').style.display = 'block';
@@ -2262,6 +2443,13 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             // 자동 업데이트 시작 (선택된 시간 프레임에 따라)
             const tfInfo = timeframeInfo[selectedTimeframe];
             updateInterval = setInterval(draw, tfInfo.updateInterval);
+            
+            // 신호 색상 초기 업데이트 (3초 후 시작)
+            setTimeout(() => {
+                updateAllSignalColors();
+                // 5분마다 신호 색상 업데이트
+                signalUpdateInterval = setInterval(updateAllSignalColors, 5 * 60 * 1000);
+            }, 3000);
         };
     </script>
 </body>
