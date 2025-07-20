@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>업비트 ETH 실시간 신호 분석</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto 40px auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px 30px 30px 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            height: 600px;
+        }
+        
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        
+        .signal-display {
+            text-align: center;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 15px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .signal-buy {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+        }
+        
+        .signal-sell {
+            background: linear-gradient(135deg, #fc466b, #3f5efb);
+            color: white;
+        }
+        
+        .signal-hold {
+            background: linear-gradient(135deg, #fdbb2d, #22c1c3);
+            color: white;
+        }
+        
+        .current-price {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .indicators {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .indicator {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .indicator-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .indicator-label {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .gpt-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .gpt-section h3 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .gpt-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .gpt-guidance {
+            flex: 0 0 40%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .gpt-guidance h4 {
+            margin: 0 0 10px 0;
+            font-size: 1em;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .guidance-input {
+            width: 100%;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            font-size: 0.9em;
+            line-height: 1.4;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .guidance-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .guidance-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .gpt-analysis {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .gpt-content {
+            max-height: 300px;
+            min-height: 120px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            line-height: 1.6;
+            flex: 1;
+        }
+        
+        .gpt-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .gpt-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .gpt-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        .gpt-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .analyze-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .analyze-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* API 키 설정 모달 */
+        .api-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .api-modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .api-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 10px;
+        }
+        
+        .api-close:hover {
+            color: #000;
+        }
+        
+        .api-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        
+        .api-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .api-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .api-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .api-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .api-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .api-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .api-key-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+        }
+        
+        .api-key-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .api-key-btn.configured {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: rgba(76, 175, 80, 0.5);
+        }
+        
+        /* 토글 메뉴 컨테이너 */
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+        
+        /* 코인 선택 토글 */
+        .coin-selector {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+        }
+        
+        /* 시간 프레임 선택 */
+        .timeframe-selector {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+        }
+        
+        .timeframe-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: #666;
+            min-width: 60px;
+        }
+        
+        .timeframe-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        .timeframe-btn:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+        
+        .coin-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: #666;
+            min-width: 80px;
+        }
+        
+        .coin-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        .coin-btn:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+        
+        .coin-btn .coin-icon {
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .toggle-container {
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 25px;
+            }
+            
+            .coin-selector,
+            .timeframe-selector {
+                width: fit-content;
+                margin: 0 auto;
+            }
+            
+            .gpt-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .gpt-guidance {
+                flex: none;
+            }
+            
+            .guidance-input {
+                height: 200px;
+            }
+            
+            .gpt-content {
+                max-height: 250px;
+            }
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .status {
+            text-align: center;
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin: 10px 0;
+        }
+        
+        /* 툴팁 스타일 */
+        .tooltip {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            line-height: 1.4;
+            white-space: pre-line;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            min-width: 280px;
+            max-width: 350px;
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid rgba(0, 0, 0, 0.95);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .tooltip:hover::after,
+        .tooltip:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* 모바일에서 툴팁 위치 조정 */
+        @media (max-width: 768px) {
+            .tooltip::after {
+                min-width: 240px;
+                max-width: 280px;
+                font-size: 0.8em;
+                padding: 10px 12px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .indicators {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 토글 메뉴 컨테이너 -->
+        <div class="toggle-container">
+            <!-- 코인 선택 토글 -->
+            <div class="coin-selector tooltip" data-tooltip="🪙 거래 종목 선택
+
+💰 지원 종목:
+• 🟠 비트코인 (BTC/KRW)
+• 🔷 이더리움 (ETH/KRW)
+
+📊 종목별 독립적 분석:
+• 각각의 기술적 지표
+• 맞춤형 AI 분석
+• 실시간 데이터 업데이트">
+                <button class="coin-btn active" id="btcBtn" onclick="selectCoin('BTC')">
+                    <span class="coin-icon">🟠</span>비트코인
+                </button>
+                <button class="coin-btn" id="ethBtn" onclick="selectCoin('ETH')">
+                    <span class="coin-icon">🔷</span>이더리움
+                </button>
+            </div>
+            
+            <!-- 시간 프레임 선택 -->
+            <div class="timeframe-selector tooltip" data-tooltip="⏰ 차트 시간 프레임 선택
+
+📊 지원 시간 프레임:
+• 5분봉: 단기 매매용 (30초마다 갱신)
+• 1시간봉: 중기 분석용 (5분마다 갱신)  
+• 일봉: 장기 분석용 (30분마다 갱신)
+• 주봉: 초장기 분석용 (2시간마다 갱신)
+
+💡 일봉 이상 권장 (안정적 신호)
+🔄 클릭하면 즉시 해당 시간 프레임으로 변경">
+                <button class="timeframe-btn" id="btn5m" onclick="selectTimeframe('5m')">5분</button>
+                <button class="timeframe-btn" id="btn1h" onclick="selectTimeframe('1h')">1시간</button>
+                <button class="timeframe-btn active" id="btn1d" onclick="selectTimeframe('1d')">일봉</button>
+                <button class="timeframe-btn" id="btn1w" onclick="selectTimeframe('1w')">주봉</button>
+            </div>
+        </div>
+        
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h1 class="tooltip" data-tooltip="⚡ 업비트 암호화폐 고급 기술적 분석 시스템
+
+🔥 주요 기능:
+• 📊 13가지 기술적 지표 실시간 분석
+• 🤖 OpenAI GPT 기반 AI 분석
+• 📈 다중 이동평균선 + 볼린저 밴드
+• ⚡ MACD, RSI, ATR, 다이버전스 감지
+• 🎯 종합 매매 신호 + 신뢰도 계산
+• 🪙 BTC/ETH 종목 지원
+
+💡 Professional Trading Tool
+⚠️ 투자 결정은 신중하게!" id="mainTitle" style="margin: 0; font-size: 2.2em;">⚡ 업비트 BTC 고급 기술적 분석 시스템</h1>
+                <button class="api-key-btn tooltip" id="apiKeyBtn" onclick="openApiModal()" data-tooltip="🔑 OpenAI API 키 설정
+
+🤖 GPT AI 분석을 사용하려면 API 키가 필요합니다
+🔒 브라우저에만 저장되며 서버로 전송되지 않습니다
+💰 OpenAI 계정에서 발급받으세요
+
+⚠️ API 키는 안전하게 보관하세요">
+                    🔑 API 키 설정
+                </button>
+            </div>
+            <div class="status" id="status">시스템 준비 중...</div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn tooltip" data-tooltip="⚡ 자동 갱신 설정
+
+🔄 선택된 시간 프레임에 따라 자동 업데이트
+📊 5분봉: 30초마다 / 1시간봉: 5분마다
+📊 일봉: 30분마다 / 주봉: 2시간마다
+🔛 ON/OFF 토글 가능
+
+💡 시간 프레임에 최적화된 갱신 주기" onclick="toggleAutoUpdate()">자동 갱신 토글</button>
+            <button class="btn tooltip" data-tooltip="🔄 즉시 갱신
+
+📊 최신 데이터로 즉시 업데이트
+⚡ 모든 지표 재계산
+🤖 AI 분석 새로 요청
+
+💡 중요한 시점에 즉시 확인" onclick="draw()">수동 갱신</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="chart-container tooltip" id="chartContainer" data-tooltip="📊 전문 BTC/KRW 종합 차트
+
+📈 표시 항목:
+• 📈 BTC 종가/고가/저가
+• 🟡 MA(5) - 단기 추세선
+• 🔴 MA(20) - 중기 추세선  
+• 🟣 MA(60) - 장기 추세선
+• 🔴 볼린저 상단 밴드
+• 🟢 볼린저 하단 밴드
+• 📊 거래량 (우측 축)
+
+💡 차트 기능:
+• 마우스 호버로 정확한 값 확인
+• 범례 클릭으로 라인 ON/OFF
+• 반응형 차트">
+                <canvas id="priceChart"></canvas>
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-card">
+                    <h3 class="tooltip" id="priceTitle" data-tooltip="💰 실시간 BTC 가격
+
+🔍 업비트 5분봉 기준 최신 거래가
+📊 모든 기술적 분석의 기준이 되는 현재가
+⚡ 30초마다 자동 업데이트">💰 현재 가격</h3>
+                    <div class="current-price" id="currentPrice">로딩 중...</div>
+                    
+                    <div class="indicators">
+                        <div class="indicator tooltip" data-tooltip="📊 RSI (상대강도지수)
+
+🔍 개념: 14일간 상승/하락 폭을 비교하여 과매수/과매도를 판단
+
+📈 활용법:
+• 30 이하: 과매도 구간 → 매수 타이밍
+• 70 이상: 과매수 구간 → 매도 타이밍
+• 50 근처: 중립, 추세 확인 필요
+
+⚠️ 주의: 강한 추세에서는 과매수/과매도가 지속될 수 있음">
+                            <div class="indicator-value" id="rsiValue">-</div>
+                            <div class="indicator-label">RSI (14)</div>
+                        </div>
+                        <div class="indicator tooltip" data-tooltip="📊 MACD (이동평균 수렴확산지표)
+
+🔍 개념: 12일/26일 지수이동평균의 차이와 9일 신호선
+
+📈 활용법:
+• MACD > Signal: 상승 모멘텀
+• MACD < Signal: 하락 모멘텀
+• 0선 돌파: 추세 전환 신호
+• 다이버전스: 추세 약화 신호
+
+⚡ 특징: 추세 추종형 지표, 지연성 있음">
+                            <div class="indicator-value" id="macdValue">-</div>
+                            <div class="indicator-label">MACD</div>
+                        </div>
+                        <div class="indicator tooltip" data-tooltip="📊 볼린저 밴드 위치
+
+🔍 개념: 20일 이동평균 ± 2표준편차 밴드
+
+📈 활용법:
+• 🟢 하단: 과매도, 반등 가능성 높음
+• 🔴 상단: 과매수, 조정 가능성 높음
+• 🟡 상부/하부: 중간 영역, 추세 확인
+• 밴드 축소: 변동성 감소, 큰 움직임 예고
+
+💡 팁: 밴드 이탈 후 재진입이 더 안전한 신호">
+                            <div class="indicator-value" id="bbValue">-</div>
+                            <div class="indicator-label">볼린저 위치</div>
+                        </div>
+                        <div class="indicator tooltip" data-tooltip="📊 ATR (평균진실범위)
+
+🔍 개념: 14일간 실제 가격 변동폭의 평균
+
+📈 활용법:
+• 높은 ATR: 변동성 큰 시장, 큰 수익/손실 가능
+• 낮은 ATR: 안정적 시장, 작은 변동
+• 손절선 설정: 현재가 ± (ATR × 2)
+• 포지션 크기 조절 기준
+
+⚠️ 리스크 관리의 핵심 지표">
+                            <div class="indicator-value" id="atrValue">-</div>
+                            <div class="indicator-label">ATR 변동성</div>
+                        </div>
+                        <div class="indicator tooltip" data-tooltip="📊 이동평균선 괴리율
+
+🔍 개념: 현재가가 20일 이동평균에서 얼마나 떨어져 있는지
+
+📈 활용법:
+• +15% 이상: 과도한 상승, 조정 가능성
+• -15% 이하: 과도한 하락, 반등 가능성
+• ±5% 이내: 정상 범위
+• 0% 근처: 이평선 터치, 지지/저항 확인
+
+💡 평균 회귀 성향을 이용한 매매 전략">
+                            <div class="indicator-value" id="divergenceValue">-</div>
+                            <div class="indicator-label">괴리율 (%)</div>
+                        </div>
+                        <div class="indicator tooltip" data-tooltip="📊 이동평균선 배열
+
+🔍 개념: MA5, MA20, MA60의 상하 관계
+
+📈 활용법:
+• 🟢 정배열 (5>20>60): 강한 상승추세
+• 🔴 역배열 (5<20<60): 강한 하락추세
+• 🟡 혼재: 박스권, 방향성 없음
+
+⚡ 골든크로스/데드크로스:
+• 단기선이 장기선 상향돌파 → 매수신호
+• 단기선이 장기선 하향돌파 → 매도신호">
+                            <div class="indicator-value" id="maStatus">-</div>
+                            <div class="indicator-label">이평선 배열</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h3 class="tooltip" data-tooltip="📊 종합 매매 신호
+
+🔍 13가지 기술적 지표 종합 분석 결과
+📈 신호 종류:
+• 🟢 매수: 상승 신호 우세
+• 🔴 매도: 하락 신호 우세  
+• 🟡 관망: 명확한 방향성 없음
+
+⚡ 신뢰도: 50~95% (지표 일치도에 따라)
+💡 높은 신뢰도일수록 신호 정확성 증가">📊 매매 신호</h3>
+                    <div class="signal-display" id="signal">분석 중...</div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <strong class="tooltip" data-tooltip="🎯 신뢰도 계산법
+
+📊 매수/매도 신호 비중 + 거래량 보정
+🔢 계산식: 기본 50% + (신호 일치도 × 45%) + (거래량 보정 5%)
+
+📈 신뢰도 해석:
+• 90%+: 매우 강한 신호
+• 80-89%: 강한 신호
+• 70-79%: 보통 신호
+• 60-69%: 약한 신호
+• 50-59%: 불확실">신뢰도: <span id="confidence">-</span>%</strong>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong class="tooltip" data-tooltip="📋 감지된 신호 상세 내역
+
+🟢 매수 신호:
+• 골든크로스, MACD 상향교차, RSI 과매도 등
+
+🔴 매도 신호:  
+• 데드크로스, MACD 하향교차, RSI 과매수 등
+
+📈 보조 신호:
+• 거래량 급증, 다이버전스, 볼린저 돌파 등">📋 신호 내역:</strong>
+                        <div id="signalList" style="font-size: 0.85em; margin-top: 10px; line-height: 1.4;">
+                            분석 중...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="gpt-section">
+            <h3 class="tooltip" data-tooltip="🤖 GPT AI 분석 리포트
+
+🔍 OpenAI GPT-3.5 모델이 제공하는 전문 분석
+📊 분석 데이터: 15개 최근 가격 + 8개 지표값
+📈 제공 정보:
+• 현재 추세 방향성 분석
+• 매수/매도 신호 + 신뢰도
+• 지지/저항선 예상 구간
+• 단기 목표가/손절선 제시
+• 위험 요소 및 주의사항
+
+⚠️ 투자 권유가 아닌 기술적 분석 의견">
+                <span>🤖 AI 분석 리포트</span>
+                <button class="analyze-btn tooltip" data-tooltip="🔍 AI 분석 실행
+
+💡 GPT-3.5로 심화 분석 요청
+📊 최신 데이터로 전문 분석
+⚡ 클릭 시에만 토큰 소비
+📝 왼쪽 지침과 함께 분석
+
+💰 토큰 절약을 위한 수동 분석" onclick="requestGPTAnalysis()" id="analyzeBtn">
+                    <span>🔍</span>
+                    <span>분석</span>
+                </button>
+            </h3>
+            
+            <div class="gpt-container">
+                <!-- 왼쪽: 지침 입력 영역 -->
+                <div class="gpt-guidance">
+                    <h4 class="tooltip" data-tooltip="📝 AI 분석 지침 설정
+
+💡 사용 예시:
+• '보수적인 관점에서 분석해줘'
+• '단기 스윙 트레이딩 관점에서 봐줘'
+• '리스크를 중점적으로 분석해줘'
+• '기관 투자자 관점에서 분석해줘'
+
+🎯 효과:
+• 맞춤형 분석 방향 설정
+• 특정 관점의 심화 분석
+• 개인 투자 성향 반영
+
+📝 비워둬도 기본 분석 실행">📝 분석 지침</h4>
+                    <textarea class="guidance-input tooltip" id="guidanceInput" 
+                        placeholder="AI에게 전달할 분석 지침을 입력하세요...
+
+예시:
+- 보수적인 관점에서 리스크를 중점적으로 분석해주세요
+- 단기 스윙 트레이딩 관점에서 진입/청산 타이밍을 알려주세요  
+- 기관 투자자 관점에서 중장기 전략을 제시해주세요
+- 과거 패턴 비교를 통한 예상 시나리오를 제시해주세요
+
+💡 구체적인 지침일수록 더 정확한 분석을 받을 수 있습니다."
+                        data-tooltip="📝 맞춤형 AI 분석 지침
+
+🎯 입력 가이드:
+• 투자 스타일 (보수적/공격적/중립적)
+• 시간 관점 (단기/중기/장기)
+• 중점 분야 (리스크/수익/타이밍)
+• 특별 요청 (패턴 분석, 시나리오 등)
+
+💡 예시 지침:
+'보수적 관점에서 하락 리스크 중점 분석'
+'단기 매매를 위한 진입점과 손절점 제시'
+'과거 비슷한 패턴과 비교 분석'
+
+📝 비워둬도 기본 분석 수행"></textarea>
+                </div>
+                
+                <!-- 오른쪽: AI 분석 결과 영역 -->
+                <div class="gpt-analysis">
+                    <h4 style="margin: 0 0 10px 0; font-size: 1em; color: rgba(255, 255, 255, 0.9);">🤖 AI 분석 결과</h4>
+                    <div class="gpt-content" id="gptSignal">
+                        💡 <strong>AI 분석을 받으려면 위의 '분석' 버튼을 클릭하세요!</strong><br><br>
+                        🤖 GPT-3.5가 현재 비트코인 일봉 차트를 종합적으로 분석해드립니다.<br>
+                        📊 선택된 시간 프레임에 맞는 기술적 지표로 전문적인 의견을 제공합니다.<br>
+                        📝 왼쪽에 분석 지침을 입력하면 맞춤형 분석을 받을 수 있습니다.<br><br>
+                        ⚠️ <em>토큰 절약을 위해 필요할 때만 분석을 요청하세요.</em>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </div>
+
+        <!-- API 키 설정 모달 -->
+        <div id="apiModal" class="api-modal">
+            <div class="api-modal-content">
+                <span class="api-close" onclick="closeApiModal()">&times;</span>
+                <h2 style="margin-top: 0; color: #2c3e50;">🔑 OpenAI API 키 설정</h2>
+                
+                <p style="color: #666; line-height: 1.6;">
+                    AI 분석 기능을 사용하려면 OpenAI API 키가 필요합니다.<br>
+                    API 키는 브라우저에만 저장되며 외부로 전송되지 않습니다.
+                </p>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4 style="margin: 0 0 10px 0; color: #495057;">📝 API 키 발급 방법:</h4>
+                    <ol style="margin: 0; padding-left: 20px; color: #6c757d;">
+                        <li><a href="https://platform.openai.com/api-keys" target="_blank" style="color: #667eea;">OpenAI 플랫폼</a>에 로그인</li>
+                        <li>"Create new secret key" 클릭</li>
+                        <li>생성된 키를 복사해서 아래에 입력</li>
+                    </ol>
+                </div>
+                
+                <label for="apiKeyInput" style="display: block; margin-bottom: 5px; font-weight: bold; color: #495057;">
+                    API 키 입력:
+                </label>
+                <input type="password" id="apiKeyInput" class="api-input" placeholder="OpenAI API 키를 입력하세요..." 
+                       style="box-sizing: border-box;">
+                
+                <div style="margin-top: 20px;">
+                    <button class="api-btn" onclick="saveApiKey()">💾 저장</button>
+                    <button class="api-btn" onclick="testApiKey()" style="background: #28a745;">🔍 테스트</button>
+                    <button class="api-btn" onclick="clearApiKey()" style="background: #dc3545;">🗑️ 삭제</button>
+                </div>
+                
+                <div id="apiStatus" class="api-status" style="display: none;"></div>
+                
+                <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px;">
+                    <small style="color: #856404;">
+                        ⚠️ <strong>보안 주의:</strong> API 키를 다른 사람과 공유하지 마세요. 
+                        사용량에 따라 OpenAI 요금이 부과됩니다.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+    <script>
+        // OpenAI API Key (사용자가 직접 입력)
+        let OPENAI_API_KEY = "";
+        
+        // 프록시 서버 설정 (API 키 없이 사용 가능)
+        const USE_PROXY_SERVER = false; // 사용자가 직접 API 키 입력
+        
+        // 프록시 서버 주소 설정
+        // 로컬 Express 서버: "http://localhost:3001"
+        // Vercel Functions: "" (현재 도메인 사용, api/gpt 엔드포인트)
+        // Railway/Heroku: "https://your-app.railway.app" 또는 "https://your-app.herokuapp.com"
+        const PROXY_SERVER_URL = ""; // Vercel Functions 사용시 빈 문자열
+        
+        let chart;
+        let autoUpdate = true;
+        let updateInterval;
+        
+        // 현재 선택된 코인 (기본값: BTC)
+        let selectedCoin = 'BTC';
+        
+        // 현재 선택된 시간 프레임 (기본값: 일봉)
+        let selectedTimeframe = '1d';
+        
+        // 코인별 정보
+        const coinInfo = {
+            'BTC': {
+                name: '비트코인',
+                symbol: 'BTC',
+                market: 'KRW-BTC',
+                icon: '🟠',
+                color: '#f7931a'
+            },
+            'ETH': {
+                name: '이더리움',
+                symbol: 'ETH',
+                market: 'KRW-ETH',
+                icon: '🔷',
+                color: '#627eea'
+            }
+        };
+        
+        // 시간 프레임별 정보
+        const timeframeInfo = {
+            '5m': {
+                name: '5분봉',
+                apiPath: 'minutes/5',
+                updateInterval: 30000,  // 30초
+                description: '단기 매매'
+            },
+            '1h': {
+                name: '1시간봉', 
+                apiPath: 'minutes/60',
+                updateInterval: 300000, // 5분
+                description: '중기 분석'
+            },
+            '1d': {
+                name: '일봉',
+                apiPath: 'days',
+                updateInterval: 1800000, // 30분
+                description: '장기 분석'
+            },
+            '1w': {
+                name: '주봉',
+                apiPath: 'weeks', 
+                updateInterval: 7200000, // 2시간
+                description: '초장기 분석'
+            }
+        };
+        
+        // GPT 분석을 위한 최신 데이터 저장
+        let latestAnalysisData = {
+            closes: [],
+            rsi: [],
+            ma20: []
+        };
+        
+        // 시간 프레임 선택 함수
+        function selectTimeframe(timeframe) {
+            // 이전 선택 해제
+            document.querySelectorAll('.timeframe-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 새로운 선택 활성화
+            const btnId = 'btn' + timeframe;
+            document.getElementById(btnId).classList.add('active');
+            
+            // 선택된 시간 프레임 업데이트
+            selectedTimeframe = timeframe;
+            const tfInfo = timeframeInfo[timeframe];
+            const coinInfoCurrent = coinInfo[selectedCoin];
+            
+            // 자동 갱신 주기 변경
+            if (autoUpdate) {
+                clearInterval(updateInterval);
+                updateInterval = setInterval(draw, tfInfo.updateInterval);
+            }
+            
+            // 차트 제목 업데이트
+            if (chart) {
+                const currentCoin = coinInfo[selectedCoin];
+                chart.options.plugins.title.text = `${currentCoin.symbol}/KRW ${tfInfo.name} 기술적 분석 차트`;
+            }
+            
+            // GPT 분석 영역 초기화
+            document.getElementById('gptSignal').innerHTML = `
+                💡 <strong>AI 분석을 받으려면 위의 '분석' 버튼을 클릭하세요!</strong><br><br>
+                🤖 GPT-3.5가 현재 ${coinInfoCurrent.name} ${tfInfo.name} 차트를 종합적으로 분석해드립니다.<br>
+                📊 선택된 시간 프레임에 맞는 기술적 지표로 전문적인 의견을 제공합니다.<br><br>
+                ⚠️ <em>토큰 절약을 위해 필요할 때만 분석을 요청하세요.</em>
+            `;
+            
+            // 최신 데이터 초기화
+            latestAnalysisData = {
+                closes: [],
+                rsi: [],
+                ma20: []
+            };
+            
+            // 상태 메시지 업데이트
+            document.getElementById('status').textContent = `${tfInfo.name}으로 변경됨 - 데이터 로딩 중...`;
+            
+            // 새로운 시간 프레임 데이터로 차트 업데이트
+            draw();
+        }
+        
+        // 코인 선택 함수
+        function selectCoin(coin) {
+            // 이전 선택 해제
+            document.getElementById('btcBtn').classList.remove('active');
+            document.getElementById('ethBtn').classList.remove('active');
+            
+            // 새로운 선택 활성화
+            const btnId = coin === 'BTC' ? 'btcBtn' : 'ethBtn';
+            document.getElementById(btnId).classList.add('active');
+            
+            // 선택된 코인 업데이트
+            selectedCoin = coin;
+            const info = coinInfo[coin];
+            
+            // 제목 업데이트
+            document.getElementById('mainTitle').textContent = `⚡ 업비트 ${info.name} 고급 기술적 분석 시스템`;
+            
+            // 차트가 존재하면 업데이트
+            if (chart) {
+                const tfInfo = timeframeInfo[selectedTimeframe];
+                chart.options.plugins.title.text = `${info.symbol}/KRW ${tfInfo.name} 기술적 분석 차트`;
+                chart.data.datasets[0].label = `${info.symbol} 종가`;
+                chart.data.datasets[1].label = `${info.symbol} 고가`;
+                chart.data.datasets[2].label = `${info.symbol} 저가`;
+                chart.update();
+            }
+            
+            // 툴팁 업데이트
+            document.getElementById('priceTitle').setAttribute('data-tooltip', `💰 실시간 ${info.name} 가격
+
+🔍 업비트 5분봉 기준 최신 거래가
+📊 모든 기술적 분석의 기준이 되는 현재가
+⚡ 30초마다 자동 업데이트`);
+
+            document.getElementById('chartContainer').setAttribute('data-tooltip', `📊 전문 ${info.symbol}/KRW 종합 차트
+
+📈 표시 항목:
+• 📈 ${info.symbol} 종가/고가/저가
+• 🟡 MA(5) - 단기 추세선
+• 🔴 MA(20) - 중기 추세선  
+• 🟣 MA(60) - 장기 추세선
+• 🔴 볼린저 상단 밴드
+• 🟢 볼린저 하단 밴드
+• 📊 거래량 (우측 축)
+
+💡 차트 기능:
+• 마우스 호버로 정확한 값 확인
+• 범례 클릭으로 라인 ON/OFF
+• 반응형 차트`);
+            
+            // GPT 분석 영역 초기화
+            document.getElementById('gptSignal').innerHTML = `
+                💡 <strong>AI 분석을 받으려면 위의 '분석' 버튼을 클릭하세요!</strong><br><br>
+                🤖 GPT-3.5가 현재 ${info.name} 시장 상황을 종합적으로 분석해드립니다.<br>
+                📊 15개 최근 가격 데이터와 8개 기술적 지표를 바탕으로 전문적인 의견을 제공합니다.<br><br>
+                ⚠️ <em>토큰 절약을 위해 필요할 때만 분석을 요청하세요.</em>
+            `;
+            
+            // 최신 데이터 초기화
+            latestAnalysisData = {
+                closes: [],
+                rsi: [],
+                ma20: []
+            };
+            
+            // 상태 메시지 업데이트
+            document.getElementById('status').textContent = `${info.name} 종목으로 변경됨 - 데이터 로딩 중...`;
+            
+            // 새로운 데이터로 차트 업데이트
+            draw();
+        }
+        
+        // 차트 초기화 (Chart.js 사용)
+        function initChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'BTC 종가',
+                        data: [],
+                        borderColor: '#1f77b4',
+                        backgroundColor: 'rgba(31, 119, 180, 0.1)',
+                        tension: 0.1,
+                        fill: false,
+                        borderWidth: 2,
+                        order: 1
+                    }, {
+                        label: 'BTC 고가',
+                        data: [],
+                        borderColor: 'rgba(255, 99, 132, 0.3)',
+                        backgroundColor: 'transparent',
+                        tension: 0.1,
+                        fill: false,
+                        borderWidth: 1,
+                        borderDash: [2, 2],
+                        order: 2
+                    }, {
+                        label: 'BTC 저가',
+                        data: [],
+                        borderColor: 'rgba(54, 162, 235, 0.3)',
+                        backgroundColor: 'transparent',
+                        tension: 0.1,
+                        fill: false,
+                        borderWidth: 1,
+                        borderDash: [2, 2],
+                        order: 3
+                    }, {
+                        label: 'MA(5)',
+                        data: [],
+                        borderColor: '#fbbf24',
+                        backgroundColor: 'transparent',
+                        tension: 0.1,
+                        fill: false,
+                        borderWidth: 2,
+                        order: 4
+                    }, {
+                        label: 'MA(20)',
+                        data: [],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'transparent',
+                        tension: 0.1,
+                        fill: false,
+                        borderWidth: 2,
+                        order: 5
+                    }, {
+                        label: 'MA(60)',
+                        data: [],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'transparent',
+                        tension: 0.1,
+                        fill: false,
+                        borderWidth: 2,
+                        order: 6
+                    }, {
+                        label: '볼린저 상단',
+                        data: [],
+                        borderColor: 'rgba(239, 68, 68, 0.5)',
+                        backgroundColor: 'transparent',
+                        tension: 0.1,
+                        fill: false,
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        order: 7
+                    }, {
+                        label: '볼린저 하단',
+                        data: [],
+                        borderColor: 'rgba(34, 197, 94, 0.5)',
+                        backgroundColor: 'transparent',
+                        tension: 0.1,
+                        fill: false,
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        order: 8
+                    }, {
+                        label: '거래량',
+                        data: [],
+                        type: 'bar',
+                        backgroundColor: 'rgba(75, 192, 192, 0.3)',
+                        borderColor: 'rgba(75, 192, 192, 0.8)',
+                        borderWidth: 1,
+                        yAxisID: 'volume',
+                        order: 9
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'BTC/KRW 고급 기술적 분석 차트'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category',
+                            title: {
+                                display: true,
+                                text: '시간'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '가격 (KRW)'
+                            },
+                            grid: {
+                                drawOnChartArea: true,
+                            },
+                        },
+                        volume: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '거래량'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+        
+        // RSI 계산
+        function calculateRSI(prices, period = 14) {
+            if (prices.length < period + 1) return [];
+            
+            const rsi = [];
+            for (let i = period; i < prices.length; i++) {
+                let gains = 0;
+                let losses = 0;
+                
+                for (let j = i - period + 1; j <= i; j++) {
+                    const change = prices[j] - prices[j - 1];
+                    if (change > 0) gains += change;
+                    else losses -= change;
+                }
+                
+                const avgGain = gains / period;
+                const avgLoss = losses / period;
+                const rs = avgGain / avgLoss;
+                const rsiValue = 100 - (100 / (1 + rs));
+                
+                rsi.push(rsiValue);
+            }
+            
+            return rsi;
+        }
+        
+        // 이동평균 계산
+        function calculateMA(prices, period = 20) {
+            if (prices.length < period) return [];
+            
+            const ma = [];
+            for (let i = period - 1; i < prices.length; i++) {
+                const sum = prices.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+                ma.push(sum / period);
+            }
+            
+            return ma;
+        }
+        
+        // MACD 계산
+        function calculateMACD(prices, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) {
+            if (prices.length < slowPeriod) return { macd: [], signal: [], histogram: [] };
+            
+            // EMA 계산 함수
+            const calculateEMA = (data, period) => {
+                const ema = [];
+                const multiplier = 2 / (period + 1);
+                ema[0] = data[0];
+                
+                for (let i = 1; i < data.length; i++) {
+                    ema[i] = (data[i] * multiplier) + (ema[i - 1] * (1 - multiplier));
+                }
+                return ema;
+            };
+            
+            const fastEMA = calculateEMA(prices, fastPeriod);
+            const slowEMA = calculateEMA(prices, slowPeriod);
+            
+            const macd = [];
+            for (let i = 0; i < prices.length; i++) {
+                if (fastEMA[i] && slowEMA[i]) {
+                    macd.push(fastEMA[i] - slowEMA[i]);
+                }
+            }
+            
+            const signal = calculateEMA(macd, signalPeriod);
+            const histogram = [];
+            
+            for (let i = 0; i < macd.length; i++) {
+                if (signal[i]) {
+                    histogram.push(macd[i] - signal[i]);
+                }
+            }
+            
+            return { macd, signal, histogram };
+        }
+        
+        // 볼린저 밴드 계산
+        function calculateBollingerBands(prices, period = 20, stdDev = 2) {
+            if (prices.length < period) return { upper: [], middle: [], lower: [] };
+            
+            const upper = [];
+            const middle = [];
+            const lower = [];
+            
+            for (let i = period - 1; i < prices.length; i++) {
+                const slice = prices.slice(i - period + 1, i + 1);
+                const avg = slice.reduce((a, b) => a + b, 0) / period;
+                const variance = slice.reduce((sum, price) => sum + Math.pow(price - avg, 2), 0) / period;
+                const std = Math.sqrt(variance);
+                
+                middle.push(avg);
+                upper.push(avg + (std * stdDev));
+                lower.push(avg - (std * stdDev));
+            }
+            
+            return { upper, middle, lower };
+        }
+        
+        // ATR (Average True Range) 계산
+        function calculateATR(highs, lows, closes, period = 14) {
+            if (highs.length < period + 1) return [];
+            
+            const trueRanges = [];
+            for (let i = 1; i < highs.length; i++) {
+                const tr1 = highs[i] - lows[i];
+                const tr2 = Math.abs(highs[i] - closes[i - 1]);
+                const tr3 = Math.abs(lows[i] - closes[i - 1]);
+                trueRanges.push(Math.max(tr1, tr2, tr3));
+            }
+            
+            const atr = [];
+            for (let i = period - 1; i < trueRanges.length; i++) {
+                const sum = trueRanges.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+                atr.push(sum / period);
+            }
+            
+            return atr;
+        }
+        
+        // 괴리율 계산
+        function calculateDivergenceRate(prices, ma) {
+            if (!ma || ma.length === 0) return [];
+            
+            const divergence = [];
+            const startIndex = prices.length - ma.length;
+            
+            for (let i = 0; i < ma.length; i++) {
+                const price = prices[startIndex + i];
+                const maValue = ma[i];
+                const rate = ((price - maValue) / maValue) * 100;
+                divergence.push(rate);
+            }
+            
+            return divergence;
+        }
+        
+        // 다이버전스 감지
+        function detectDivergence(prices, indicator, lookback = 20) {
+            if (prices.length < lookback || indicator.length < lookback) return null;
+            
+            const priceSlice = prices.slice(-lookback);
+            const indicatorSlice = indicator.slice(-lookback);
+            
+            const priceHighIndex = priceSlice.indexOf(Math.max(...priceSlice));
+            const priceLowIndex = priceSlice.indexOf(Math.min(...priceSlice));
+            const indicatorHigh = Math.max(...indicatorSlice);
+            const indicatorLow = Math.min(...indicatorSlice);
+            
+            // 베어리시 다이버전스 (가격 고점 갱신, 지표 고점 하락)
+            if (priceHighIndex > lookback * 0.7 && indicatorSlice[priceHighIndex] < indicatorHigh * 0.95) {
+                return 'bearish';
+            }
+            
+            // 불리시 다이버전스 (가격 저점 갱신, 지표 저점 상승)
+            if (priceLowIndex > lookback * 0.7 && indicatorSlice[priceLowIndex] > indicatorLow * 1.05) {
+                return 'bullish';
+            }
+            
+            return null;
+        }
+        
+        // 고급 매매 신호 분석
+        function analyzeAdvancedSignal(data) {
+            const {
+                price, prices, rsi, ma5, ma20, ma60, macd, bb, 
+                volumes, atr, divergenceRate, divergence
+            } = data;
+            
+            let buySignals = 0;
+            let sellSignals = 0;
+            let signalStrength = 0;
+            let signals = [];
+            
+            // 1. 골든크로스/데드크로스 확인
+            if (ma5 && ma20 && ma60) {
+                const ma5Current = ma5[ma5.length - 1];
+                const ma20Current = ma20[ma20.length - 1];
+                const ma60Current = ma60[ma60.length - 1];
+                
+                if (ma5Current > ma20Current && ma20Current > ma60Current) {
+                    buySignals += 2;
+                    signals.push('🟢 골든크로스 (5>20>60)');
+                } else if (ma5Current < ma20Current && ma20Current < ma60Current) {
+                    sellSignals += 2;
+                    signals.push('🔴 데드크로스 (5<20<60)');
+                }
+            }
+            
+            // 2. RSI 신호
+            if (rsi) {
+                if (rsi < 30) {
+                    buySignals += 1;
+                    signals.push('🟢 RSI 과매도 구간');
+                } else if (rsi > 70) {
+                    sellSignals += 1;
+                    signals.push('🔴 RSI 과매수 구간');
+                }
+            }
+            
+            // 3. MACD 신호
+            if (macd && macd.macd.length > 1 && macd.signal.length > 1) {
+                const macdCurrent = macd.macd[macd.macd.length - 1];
+                const macdPrev = macd.macd[macd.macd.length - 2];
+                const signalCurrent = macd.signal[macd.signal.length - 1];
+                const signalPrev = macd.signal[macd.signal.length - 2];
+                
+                // MACD 상향 교차
+                if (macdPrev <= signalPrev && macdCurrent > signalCurrent) {
+                    buySignals += 2;
+                    signals.push('🟢 MACD 상향 교차');
+                }
+                // MACD 하향 교차
+                else if (macdPrev >= signalPrev && macdCurrent < signalCurrent) {
+                    sellSignals += 2;
+                    signals.push('🔴 MACD 하향 교차');
+                }
+            }
+            
+            // 4. 볼린저 밴드 신호
+            if (bb && bb.upper.length > 0) {
+                const upperBand = bb.upper[bb.upper.length - 1];
+                const lowerBand = bb.lower[bb.lower.length - 1];
+                const middleBand = bb.middle[bb.middle.length - 1];
+                
+                if (price <= lowerBand) {
+                    buySignals += 1;
+                    signals.push('🟢 볼린저 하단 접촉');
+                } else if (price >= upperBand) {
+                    sellSignals += 1;
+                    signals.push('🔴 볼린저 상단 접촉');
+                } else if (price > middleBand) {
+                    buySignals += 0.5;
+                }
+            }
+            
+            // 5. 괴리율 신호
+            if (divergenceRate && divergenceRate.length > 0) {
+                const currentDivergence = divergenceRate[divergenceRate.length - 1];
+                if (currentDivergence < -15) {
+                    buySignals += 1;
+                    signals.push('🟢 이평선 대비 과도한 하락');
+                } else if (currentDivergence > 15) {
+                    sellSignals += 1;
+                    signals.push('🔴 이평선 대비 과도한 상승');
+                }
+            }
+            
+            // 6. 다이버전스 신호
+            if (divergence) {
+                if (divergence === 'bullish') {
+                    buySignals += 2;
+                    signals.push('🟢 강한 불리시 다이버전스');
+                } else if (divergence === 'bearish') {
+                    sellSignals += 2;
+                    signals.push('🔴 강한 베어리시 다이버전스');
+                }
+            }
+            
+            // 7. 거래량 확인 (임의 볼륨 증가 시뮬레이션)
+            if (volumes && volumes.length > 1) {
+                const currentVol = volumes[volumes.length - 1];
+                const avgVol = volumes.slice(-20).reduce((a,b) => a+b, 0) / 20;
+                
+                if (currentVol > avgVol * 1.5) {
+                    signalStrength += 1;
+                    signals.push('📈 거래량 급증');
+                }
+            }
+            
+            // 최종 신호 결정
+            let finalSignal = '관망';
+            let confidence = 50;
+            
+            const totalSignals = buySignals + sellSignals;
+            if (totalSignals > 0) {
+                if (buySignals > sellSignals * 1.5) {
+                    finalSignal = '매수';
+                    confidence = Math.min(95, 50 + (buySignals / totalSignals) * 45 + signalStrength * 5);
+                } else if (sellSignals > buySignals * 1.5) {
+                    finalSignal = '매도';
+                    confidence = Math.min(95, 50 + (sellSignals / totalSignals) * 45 + signalStrength * 5);
+                }
+            }
+            
+            return {
+                signal: finalSignal,
+                confidence: Math.round(confidence),
+                signals: signals,
+                buySignals,
+                sellSignals
+            };
+        }
+        
+        // 고급 GPT API 호출
+        async function getGPTSignal(closes, rsi, ma20) {
+            // 프록시 서버 사용 시 API 키 불필요
+            if (!USE_PROXY_SERVER && !OPENAI_API_KEY) {
+                return `🔑 <strong>API 키가 설정되지 않았습니다!</strong><br><br>
+                AI 분석 기능을 사용하려면 OpenAI API 키가 필요합니다.<br><br>
+                📝 <strong>설정 방법:</strong><br>
+                1. 우측 상단의 "🔑 API 키 설정" 버튼 클릭<br>
+                2. OpenAI 플랫폼에서 API 키 발급<br>
+                3. 발급받은 키를 입력 후 저장<br><br>
+                💡 설정 후 다시 분석 버튼을 클릭해주세요.`;
+            }
+            
+            try {
+                const recentPrices = closes.slice(-15);
+                const recentRSI = rsi.slice(-8);
+                const recentMA = ma20.slice(-8);
+                
+                // 추가 분석 정보
+                const priceChange = ((closes[closes.length-1] - closes[closes.length-2]) / closes[closes.length-2] * 100).toFixed(2);
+                const maDistance = ((closes[closes.length-1] - ma20[ma20.length-1]) / ma20[ma20.length-1] * 100).toFixed(2);
+                
+                const currentCoin = coinInfo[selectedCoin];
+                const frameInfo = timeframeInfo[selectedTimeframe];
+                // 가격을 억/만 단위로 변환
+                const formatPrice = (price) => {
+                    if (price >= 100000000) { // 1억 이상
+                        return `${(price/100000000).toFixed(2)}억원`;
+                    } else if (price >= 10000) { // 1만 이상
+                        return `${(price/10000).toFixed(0)}만원`;
+                    } else {
+                        return `${price}원`;
+                    }
+                };
+
+                // 사용자 지침 가져오기
+                const guidanceInput = document.getElementById('guidanceInput');
+                const userGuidance = guidanceInput ? guidanceInput.value.trim() : '';
+                
+                // 지침이 있으면 포함, 없으면 기본 분석
+                const guidanceSection = userGuidance ? 
+                    `\n🎯 분석 지침: ${userGuidance}\n` : 
+                    '\n🎯 분석 지침: 종합적이고 객관적인 기술적 분석을 제공해주세요.\n';
+
+                const prompt = `${currentCoin.name}(${currentCoin.symbol}) ${frameInfo.name} 기술적 분석:
+
+📊 시장 데이터:
+현재가격: ${formatPrice(closes[closes.length-1])}
+최근 3개 가격: ${recentPrices.slice(-3).map(p => formatPrice(p)).join(' → ')}
+최근 RSI: ${recentRSI.slice(-3).map(r => r?.toFixed(1)).join(' → ')}
+이평선(20일): ${formatPrice(recentMA[recentMA.length-1])}
+전일 대비: ${priceChange}%
+이평선 괴리: ${maDistance}%${guidanceSection}
+위 데이터와 지침을 바탕으로 다음 형식으로 답변:
+
+${userGuidance ? `🎯 지침 답변: ${userGuidance}에 대한 구체적 답변
+
+` : ''}1. 추세: (상승/하락/횡보)
+2. 신호: (매수/매도/관망) 신뢰도 XX%
+3. 지지선/저항선: X.XX억원, X.XX억원
+4. 목표가 또는 손절가: X.XX억원
+5. 주의사항: 한줄 설명
+
+${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래에 작성하세요.' : '총 5줄로 완성하세요.'}`;
+
+                let response, data;
+                
+                if (USE_PROXY_SERVER) {
+                    // 프록시 서버 사용
+                    // Express 서버: /api/gpt/analyze
+                    // Vercel Functions: /api/gpt
+                    const endpoint = PROXY_SERVER_URL.includes('localhost') ? '/api/gpt/analyze' : '/api/gpt';
+                    const url = PROXY_SERVER_URL ? `${PROXY_SERVER_URL}${endpoint}` : endpoint;
+                    
+                    response = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ prompt })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `프록시 서버 오류: ${response.status}`);
+                    }
+                    
+                    data = await response.json();
+                    return data.analysis;
+                    
+                } else {
+                    // 직접 OpenAI API 사용
+                    response = await fetch("https://api.openai.com/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${OPENAI_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            model: "gpt-3.5-turbo",
+                            messages: [{role: "user", content: prompt}],
+                            max_tokens: 600,
+                            temperature: 0.3
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API 호출 실패: ${response.status}`);
+                    }
+                    
+                    data = await response.json();
+                    
+                    // 응답이 완료되었는지 확인
+                    let analysis = data.choices[0].message.content.trim();
+                    
+                    // 응답이 너무 짧거나 중간에 끊어진 경우 표시
+                    if (data.choices[0].finish_reason === 'length') {
+                        analysis += "\n\n⚠️ 응답이 길어서 일부가 잘렸을 수 있습니다.";
+                    }
+                    
+                    return analysis;
+                }
+                
+            } catch (error) {
+                console.error('GPT API 호출 오류:', error);
+                return `❌ AI 분석 오류: ${error.message}. API 키를 확인해주세요.`;
+            }
+        }
+        
+        // 업비트 데이터 가져오기 및 차트 업데이트
+        async function draw() {
+            try {
+                document.getElementById('status').textContent = '고급 분석 중...';
+                
+                // 선택된 코인과 시간 프레임의 업비트 API에서 캔들 데이터 가져오기
+                const currentCoin = coinInfo[selectedCoin];
+                const timeframeConfig = timeframeInfo[selectedTimeframe];
+                const response = await fetch(`https://api.upbit.com/v1/candles/${timeframeConfig.apiPath}?market=${currentCoin.market}&count=200`);
+                if (!response.ok) throw new Error('업비트 API 호출 실패');
+                
+                const candleData = await response.json();
+                const reversedData = candleData.reverse(); // 시간순 정렬
+                
+                // 시간 프레임에 따른 라벨 포맷 설정
+                const labels = reversedData.map(item => {
+                    const date = new Date(item.candle_date_time_kst);
+                    
+                    switch(selectedTimeframe) {
+                        case '5m':
+                        case '1h':
+                            // 분봉, 시간봉: 시간 표시
+                            return date.toLocaleTimeString('ko-KR', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            });
+                        case '1d':
+                            // 일봉: 월/일 표시
+                            return date.toLocaleDateString('ko-KR', { 
+                                month: 'short', 
+                                day: 'numeric' 
+                            });
+                        case '1w':
+                            // 주봉: 월/일 표시
+                            return date.toLocaleDateString('ko-KR', { 
+                                month: 'short', 
+                                day: 'numeric' 
+                            });
+                        default:
+                            return date.toLocaleTimeString('ko-KR', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            });
+                    }
+                });
+                
+                const prices = reversedData.map(item => item.trade_price);
+                const highs = reversedData.map(item => item.high_price);
+                const lows = reversedData.map(item => item.low_price);
+                const volumes = reversedData.map(item => item.candle_acc_trade_volume);
+                const closes = prices;
+                
+                // 모든 기술적 지표 계산
+                const rsi = calculateRSI(closes);
+                const ma5 = calculateMA(closes, 5);
+                const ma20 = calculateMA(closes, 20);
+                const ma60 = calculateMA(closes, 60);
+                const macd = calculateMACD(closes);
+                const bb = calculateBollingerBands(closes);
+                const atr = calculateATR(highs, lows, closes);
+                const divergenceRate = calculateDivergenceRate(closes, ma20);
+                const divergence = detectDivergence(closes, rsi);
+                
+                // 차트 데이터 업데이트
+                chart.data.labels = labels;
+                
+                // 가격 데이터 (종가, 고가, 저가)
+                chart.data.datasets[0].data = prices; // 종가
+                chart.data.datasets[1].data = highs;  // 고가  
+                chart.data.datasets[2].data = lows;   // 저가
+
+                // 이동평균선 데이터
+                chart.data.datasets[3].data = ma5.length > 0 ? 
+                    Array(prices.length - ma5.length).fill(null).concat(ma5) : [];
+                chart.data.datasets[4].data = ma20.length > 0 ? 
+                    Array(prices.length - ma20.length).fill(null).concat(ma20) : [];
+                chart.data.datasets[5].data = ma60.length > 0 ? 
+                    Array(prices.length - ma60.length).fill(null).concat(ma60) : [];
+
+                // 볼린저 밴드 데이터
+                chart.data.datasets[6].data = bb.upper.length > 0 ? 
+                    Array(prices.length - bb.upper.length).fill(null).concat(bb.upper) : [];
+                chart.data.datasets[7].data = bb.lower.length > 0 ? 
+                    Array(prices.length - bb.lower.length).fill(null).concat(bb.lower) : [];
+
+                // 거래량 데이터 (정규화)
+                if (volumes && volumes.length > 0) {
+                    const maxVolume = Math.max(...volumes);
+                    const normalizedVolumes = volumes.map(vol => vol / maxVolume * Math.max(...prices) * 0.1);
+                    chart.data.datasets[8].data = normalizedVolumes;
+                } else {
+                    chart.data.datasets[8].data = [];
+                }
+
+                // 차트 업데이트
+                chart.update();
+                
+                // 현재 값들
+                const currentPrice = prices[prices.length - 1];
+                const currentRSI = rsi[rsi.length - 1];
+                const currentMACD = macd.macd[macd.macd.length - 1];
+                const currentATR = atr[atr.length - 1];
+                const currentDivergenceRate = divergenceRate[divergenceRate.length - 1];
+                
+                // 이평선 배열 상태
+                const ma5Current = ma5[ma5.length - 1];
+                const ma20Current = ma20[ma20.length - 1];
+                const ma60Current = ma60[ma60.length - 1];
+                let maStatus = '정배열';
+                if (ma5Current && ma20Current && ma60Current) {
+                    if (ma5Current > ma20Current && ma20Current > ma60Current) {
+                        maStatus = '🟢 정배열';
+                    } else if (ma5Current < ma20Current && ma20Current < ma60Current) {
+                        maStatus = '🔴 역배열';
+                    } else {
+                        maStatus = '🟡 혼재';
+                    }
+                }
+                
+                // 볼린저 밴드 위치
+                let bbPosition = '-';
+                if (bb.upper.length > 0 && bb.lower.length > 0) {
+                    const upperBand = bb.upper[bb.upper.length - 1];
+                    const lowerBand = bb.lower[bb.lower.length - 1];
+                    const middleBand = bb.middle[bb.middle.length - 1];
+                    
+                    if (currentPrice >= upperBand) {
+                        bbPosition = '🔴 상단';
+                    } else if (currentPrice <= lowerBand) {
+                        bbPosition = '🟢 하단';
+                    } else if (currentPrice > middleBand) {
+                        bbPosition = '🟡 상부';
+                    } else {
+                        bbPosition = '🟡 하부';
+                    }
+                }
+                
+                // UI 업데이트
+                document.getElementById('currentPrice').textContent = 
+                    currentPrice ? `₩${currentPrice.toLocaleString()}` : '로딩 중...';
+                
+                document.getElementById('rsiValue').textContent = 
+                    currentRSI ? currentRSI.toFixed(2) : '-';
+                
+                document.getElementById('macdValue').textContent = 
+                    currentMACD ? currentMACD.toFixed(0) : '-';
+                
+                document.getElementById('bbValue').textContent = bbPosition;
+                
+                document.getElementById('atrValue').textContent = 
+                    currentATR ? currentATR.toFixed(0) : '-';
+                
+                document.getElementById('divergenceValue').textContent = 
+                    currentDivergenceRate ? currentDivergenceRate.toFixed(1) + '%' : '-';
+                
+                document.getElementById('maStatus').textContent = maStatus;
+                
+                // 고급 신호 분석
+                const analysisData = {
+                    price: currentPrice,
+                    prices: closes,
+                    rsi: currentRSI,
+                    ma5: ma5,
+                    ma20: ma20,
+                    ma60: ma60,
+                    macd: macd,
+                    bb: bb,
+                    volumes: volumes,
+                    atr: atr,
+                    divergenceRate: divergenceRate,
+                    divergence: divergence
+                };
+                
+                const analysis = analyzeAdvancedSignal(analysisData);
+                const signalElement = document.getElementById('signal');
+                signalElement.textContent = analysis.signal;
+                signalElement.className = 'signal-display signal-' + 
+                    (analysis.signal === '매수' ? 'buy' : 
+                     analysis.signal === '매도' ? 'sell' : 'hold');
+                
+                document.getElementById('confidence').textContent = analysis.confidence;
+                
+                // 신호 리스트 업데이트
+                const signalListElement = document.getElementById('signalList');
+                if (analysis.signals.length > 0) {
+                    signalListElement.innerHTML = analysis.signals.join('<br>');
+                } else {
+                    signalListElement.textContent = '현재 명확한 신호 없음';
+                }
+                
+                // 최신 데이터를 GPT 분석용으로 저장
+                latestAnalysisData = {
+                    closes: closes,
+                    rsi: rsi,
+                    ma20: ma20
+                };
+                
+                const currentTf = timeframeInfo[selectedTimeframe];
+                document.getElementById('status').textContent = 
+                    `마지막 ${currentTf.name} 분석: ${new Date().toLocaleTimeString('ko-KR')} (${autoUpdate ? '자동' : '수동'})`;
+                
+            } catch (error) {
+                console.error('데이터 가져오기 오류:', error);
+                document.getElementById('status').textContent = `오류: ${error.message}`;
+            }
+        }
+        
+        // GPT 분석 수동 실행 함수
+        async function requestGPTAnalysis() {
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const gptSignalDiv = document.getElementById('gptSignal');
+            
+            // 데이터가 없으면 먼저 데이터를 가져오도록 안내
+            if (!latestAnalysisData.closes || latestAnalysisData.closes.length === 0) {
+                gptSignalDiv.innerHTML = '⚠️ <strong>먼저 데이터를 불러와주세요!</strong><br><br>📊 "수동 갱신" 버튼을 클릭하여 최신 데이터를 가져온 후 다시 시도해주세요.';
+                return;
+            }
+            
+            try {
+                // 버튼 비활성화
+                analyzeBtn.disabled = true;
+                analyzeBtn.innerHTML = '<span class="loading"></span><span>분석 중...</span>';
+                
+                // GPT 분석 시작 메시지
+                gptSignalDiv.innerHTML = '🤖 <strong>AI가 고급 분석 중입니다...</strong><br><br><span class="loading"></span> GPT-3.5가 최신 데이터를 분석하고 있습니다...<br>📊 15개 가격 데이터 + 8개 기술 지표 종합 분석 중';
+                
+                // GPT API 호출
+                const gptAnalysis = await getGPTSignal(
+                    latestAnalysisData.closes, 
+                    latestAnalysisData.rsi, 
+                    latestAnalysisData.ma20
+                );
+                
+                // 결과 표시
+                gptSignalDiv.innerHTML = gptAnalysis.replace(/\n/g, '<br>');
+                
+                // 버튼 다시 활성화
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<span>🔍</span><span>분석</span>';
+                
+            } catch (error) {
+                console.error('GPT 분석 오류:', error);
+                gptSignalDiv.innerHTML = `❌ <strong>분석 중 오류가 발생했습니다.</strong><br><br>🔧 오류 내용: ${error.message}<br><br>💡 API 키를 확인하거나 잠시 후 다시 시도해주세요.`;
+                
+                // 버튼 다시 활성화
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<span>🔍</span><span>분석</span>';
+            }
+        }
+        
+        // 자동 업데이트 토글
+        function toggleAutoUpdate() {
+            autoUpdate = !autoUpdate;
+            
+            if (autoUpdate) {
+                const tfInfo = timeframeInfo[selectedTimeframe];
+                updateInterval = setInterval(draw, tfInfo.updateInterval);
+                document.getElementById('status').textContent += ' (자동 갱신 ON)';
+            } else {
+                clearInterval(updateInterval);
+                document.getElementById('status').textContent += ' (자동 갱신 OFF)';
+            }
+        }
+        
+        // API 키 관리 함수들
+        function openApiModal() {
+            document.getElementById('apiModal').style.display = 'block';
+            
+            // 저장된 API 키가 있으면 표시 (마스킹)
+            const savedKey = localStorage.getItem('openai_api_key');
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+            }
+        }
+        
+        function closeApiModal() {
+            document.getElementById('apiModal').style.display = 'none';
+        }
+        
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            const statusDiv = document.getElementById('apiStatus');
+            
+            if (!apiKey) {
+                showApiStatus('API 키를 입력해주세요.', 'error');
+                return;
+            }
+            
+            // OpenAI API 키 형식 검증
+            const validPrefix = 's' + 'k' + '-';
+            if (!apiKey.startsWith(validPrefix)) {
+                showApiStatus('올바른 OpenAI API 키 형식이 아닙니다.', 'error');
+                return;
+            }
+            
+            // API 키 저장
+            localStorage.setItem('openai_api_key', apiKey);
+            OPENAI_API_KEY = apiKey;
+            
+            showApiStatus('✅ API 키가 성공적으로 저장되었습니다!', 'success');
+            updateApiKeyButtonStatus();
+        }
+        
+        async function testApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            
+            if (!apiKey) {
+                showApiStatus('테스트할 API 키를 입력해주세요.', 'error');
+                return;
+            }
+            
+            showApiStatus('🔍 API 키를 테스트 중입니다...', 'success');
+            
+            try {
+                const response = await fetch("https://api.openai.com/v1/models", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showApiStatus('✅ API 키가 정상 작동합니다!', 'success');
+                } else {
+                    showApiStatus('❌ API 키가 유효하지 않습니다. 키를 확인해주세요.', 'error');
+                }
+            } catch (error) {
+                showApiStatus('❌ 네트워크 오류가 발생했습니다.', 'error');
+            }
+        }
+        
+        function clearApiKey() {
+            if (confirm('저장된 API 키를 삭제하시겠습니까?')) {
+                localStorage.removeItem('openai_api_key');
+                OPENAI_API_KEY = "";
+                document.getElementById('apiKeyInput').value = '';
+                showApiStatus('🗑️ API 키가 삭제되었습니다.', 'success');
+                updateApiKeyButtonStatus();
+            }
+        }
+        
+        function showApiStatus(message, type) {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `api-status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+        
+        function loadApiKey() {
+            const savedKey = localStorage.getItem('openai_api_key');
+            if (savedKey) {
+                OPENAI_API_KEY = savedKey;
+                updateApiKeyButtonStatus();
+            }
+        }
+        
+        function updateApiKeyButtonStatus() {
+            const btn = document.getElementById('apiKeyBtn');
+            if (OPENAI_API_KEY) {
+                btn.textContent = '🔑 API 키 설정됨';
+                btn.classList.add('configured');
+            } else {
+                btn.textContent = '🔑 API 키 설정';
+                btn.classList.remove('configured');
+            }
+        }
+        
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('apiModal');
+            if (event.target === modal) {
+                closeApiModal();
+            }
+        }
+        
+        // 초기화
+        window.onload = function() {
+            loadApiKey(); // API 키 불러오기
+            initChart();
+            draw();
+            
+            // 자동 업데이트 시작 (선택된 시간 프레임에 따라)
+            const tfInfo = timeframeInfo[selectedTimeframe];
+            updateInterval = setInterval(draw, tfInfo.updateInterval);
+        };
+    </script>
+</body>
+</html> 
