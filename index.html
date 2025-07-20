@@ -1640,14 +1640,20 @@
                 
                 const currentCoin = coinInfo[selectedCoin];
                 const frameInfo = timeframeInfo[selectedTimeframe];
-                // 가격을 억/만 단위로 변환
+                // 통화별 가격 포맷팅
                 const formatPrice = (price) => {
-                    if (price >= 100000000) { // 1억 이상
-                        return `${(price/100000000).toFixed(2)}억원`;
-                    } else if (price >= 10000) { // 1만 이상
-                        return `${(price/10000).toFixed(0)}만원`;
+                    if (currentCoin.currency === 'USD') {
+                        // 미국 주식: 달러 단위
+                        return `$${price.toFixed(2)}`;
                     } else {
-                        return `${price}원`;
+                        // 암호화폐: 원화 단위 (억/만 변환)
+                        if (price >= 100000000) { // 1억 이상
+                            return `${(price/100000000).toFixed(2)}억원`;
+                        } else if (price >= 10000) { // 1만 이상
+                            return `${(price/10000).toFixed(0)}만원`;
+                        } else {
+                            return `${price}원`;
+                        }
                     }
                 };
 
@@ -1660,6 +1666,9 @@
                     `\n🎯 분석 지침: ${userGuidance}\n` : 
                     '\n🎯 분석 지침: 종합적이고 객관적인 기술적 분석을 제공해주세요.\n';
 
+                // 답변 형식 설정 (통화별)
+                const priceFormat = currentCoin.currency === 'USD' ? '$XXX.XX' : 'X.XX억원';
+                
                 const prompt = `${currentCoin.name}(${currentCoin.symbol}) ${frameInfo.name} 기술적 분석:
 
 📊 시장 데이터:
@@ -1675,8 +1684,8 @@ ${userGuidance ? `🎯 지침 답변: ${userGuidance}에 대한 구체적 답변
 
 ` : ''}1. 추세: (상승/하락/횡보)
 2. 신호: (매수/매도/관망) 신뢰도 XX%
-3. 지지선/저항선: X.XX억원, X.XX억원
-4. 목표가 또는 손절가: X.XX억원
+3. 지지선/저항선: ${priceFormat}, ${priceFormat}
+4. 목표가 또는 손절가: ${priceFormat}
 5. 주의사항: 한줄 설명
 
 ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래에 작성하세요.' : '총 5줄로 완성하세요.'}`;
