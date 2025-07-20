@@ -2131,6 +2131,9 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     signalListElement.textContent = '현재 명확한 신호 없음';
                 }
                 
+                // 현재 선택된 종목의 버튼 색상을 즉시 동기화
+                updateCurrentCoinButtonColor(analysis);
+                
                 // 최신 데이터를 GPT 분석용으로 저장
                 latestAnalysisData = {
                     closes: closes,
@@ -2294,9 +2297,36 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             }
         }
         
-        // 모든 종목의 버튼 색상 업데이트
+        // 현재 선택된 종목 버튼 색상 즉시 업데이트
+        function updateCurrentCoinButtonColor(analysis) {
+            const btnId = selectedCoin.toLowerCase() + 'Btn';
+            const btn = document.getElementById(btnId);
+            
+            if (btn && analysis) {
+                // 기존 신호 클래스 제거
+                btn.classList.remove('signal-strong-buy', 'signal-buy', 'signal-weak-buy', 
+                                   'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell');
+                
+                // 새로운 신호 클래스 추가
+                const signalClass = getSignalClass(analysis.signal, analysis.confidence);
+                btn.classList.add(signalClass);
+                
+                // 툴팁에 신호 정보 추가
+                const originalTitle = btn.getAttribute('data-original-tooltip') || btn.title || '';
+                const signalInfo = `\n\n📊 현재 신호: ${analysis.signal} (${analysis.confidence}%)`;
+                btn.title = originalTitle.replace(/\n\n📊 현재 신호:.*/, '') + signalInfo;
+                
+                if (!btn.getAttribute('data-original-tooltip')) {
+                    btn.setAttribute('data-original-tooltip', originalTitle);
+                }
+                
+                console.log(`✅ ${selectedCoin} 버튼 색상 업데이트: ${analysis.signal} (${analysis.confidence}%)`);
+            }
+        }
+        
+        // 모든 종목의 버튼 색상 업데이트 (현재 선택된 종목 제외)
         async function updateAllSignalColors() {
-            const symbols = Object.keys(coinInfo);
+            const symbols = Object.keys(coinInfo).filter(symbol => symbol !== selectedCoin);
             
             for (const symbol of symbols) {
                 try {
@@ -2316,7 +2346,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                         // 툴팁에 신호 정보 추가
                         const originalTitle = btn.getAttribute('data-original-tooltip') || btn.title || '';
                         const signalInfo = `\n\n📊 현재 신호: ${analysis.signal} (${analysis.confidence}%)`;
-                        btn.title = originalTitle + signalInfo;
+                        btn.title = originalTitle.replace(/\n\n📊 현재 신호:.*/, '') + signalInfo;
                         
                         if (!btn.getAttribute('data-original-tooltip')) {
                             btn.setAttribute('data-original-tooltip', originalTitle);
