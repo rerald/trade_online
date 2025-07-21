@@ -3124,7 +3124,72 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             return 'signal-hold';
         }
 
-                 // 단일 코인 버튼 색상 업데이트
+                 // 강제 버튼 색상 업데이트 (가장 강력한 방법)
+         function forceUpdateButtonColor(coin, analysisData) {
+             const btnElement = document.querySelector(`[data-coin="${coin}"]`);
+             if (!btnElement) {
+                 console.error(`버튼을 찾을 수 없음: ${coin}`);
+                 return;
+             }
+             
+             const signal = analysisData.signal;
+             const confidence = analysisData.confidence || 50;
+             
+             console.log(`🔄 ${coin} 강제 색상 업데이트 시작:`, { signal, confidence });
+             
+             // 모든 신호 클래스 강제 제거
+             const allSignalClasses = [
+                 'signal-strong-buy', 'signal-buy', 'signal-weak-buy',
+                 'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell'
+             ];
+             
+             allSignalClasses.forEach(cls => {
+                 btnElement.classList.remove(cls);
+             });
+             
+             // 새로운 클래스 결정 및 추가
+             let targetClass = 'signal-hold';
+             if (signal === 'BUY') {
+                 if (confidence >= 80) targetClass = 'signal-strong-buy';
+                 else if (confidence >= 60) targetClass = 'signal-buy';
+                 else targetClass = 'signal-weak-buy';
+             } else if (signal === 'SELL') {
+                 if (confidence >= 80) targetClass = 'signal-strong-sell';
+                 else if (confidence >= 60) targetClass = 'signal-sell';
+                 else targetClass = 'signal-weak-sell';
+             }
+             
+             // 클래스 추가
+             btnElement.classList.add(targetClass);
+             
+             // 시각적 피드백을 위한 스타일 직접 적용
+             if (signal === 'SELL' && confidence >= 80) {
+                 btnElement.style.background = 'linear-gradient(135deg, #8b0000, #dc143c)';
+                 btnElement.style.border = '2px solid #8b0000';
+                 btnElement.style.color = 'white';
+             } else if (signal === 'SELL' && confidence >= 60) {
+                 btnElement.style.background = 'linear-gradient(135deg, #c0392b, #e74c3c)';
+                 btnElement.style.border = '2px solid #c0392b';
+                 btnElement.style.color = 'white';
+             } else if (signal === 'BUY' && confidence >= 80) {
+                 btnElement.style.background = 'linear-gradient(135deg, #27ae60, #2ecc71)';
+                 btnElement.style.border = '2px solid #27ae60';
+                 btnElement.style.color = 'white';
+             } else if (signal === 'BUY' && confidence >= 60) {
+                 btnElement.style.background = 'linear-gradient(135deg, #16a085, #1abc9c)';
+                 btnElement.style.border = '2px solid #16a085';
+                 btnElement.style.color = 'white';
+             }
+             
+             console.log(`✅ ${coin} 색상 업데이트 완료: ${targetClass} (${signal} ${confidence}%)`);
+             
+             // 툴팁 업데이트
+             const signalText = signal === 'BUY' ? '매수' : signal === 'SELL' ? '매도' : '보유';
+             btnElement.setAttribute('title', 
+                 `${coinInfo[coin].name}\n신호: ${signalText} (${confidence}%)\n업데이트: ${new Date().toLocaleTimeString('ko-KR')}`);
+         }
+
+         // 단일 코인 버튼 색상 업데이트
          function updateSingleCoinButtonColor(coin) {
              const btnElement = document.querySelector(`[data-coin="${coin}"]`);
              if (btnElement && allCoinSignals[coin]) {
