@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>업비트 ETH 실시간 신호 분석</title>
+    <title>⚡ 암호화폐 실시간 분석 시스템</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
@@ -871,7 +871,7 @@
         
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h1 id="mainTitle" style="margin: 0; font-size: 2.2em;">⚡ 실시간 고급 기술적 분석 시스템</h1>
+                <h1 id="mainTitle" style="margin: 0; font-size: 2.2em;">⚡ 암호화폐 실시간 분석 시스템</h1>
                 <button class="api-key-btn tooltip" id="apiKeyBtn" onclick="openApiModal()" data-tooltip="🔑 OpenAI API 키 설정
 
 🤖 GPT AI 분석을 사용하려면 API 키가 필요합니다
@@ -1218,84 +1218,21 @@
         const coinInfo = {
             'BTC': {
                 name: '비트코인',
-                symbol: 'BTC',
                 market: 'KRW-BTC',
-                icon: '🟠',
-                color: '#f7931a',
+                symbol: 'BTC',
                 type: 'crypto',
-                currency: 'KRW'
+                currency: 'KRW',
+                icon: '🟠',
+                color: '#f7931a'
             },
             'ETH': {
                 name: '이더리움',
+                market: 'KRW-ETH', 
                 symbol: 'ETH',
-                market: 'KRW-ETH',
-                icon: '🔷',
-                color: '#627eea',
                 type: 'crypto',
-                currency: 'KRW'
-            },
-            'SAMSUNG': {
-                name: '삼성전자',
-                symbol: '005930.KS',
-                market: '005930.KS',
-                icon: '📱',
-                color: '#1f4e79',
-                type: 'stock',
-                currency: 'KRW'
-            },
-            'TSLA': {
-                name: '테슬라',
-                symbol: 'TSLA',
-                market: 'TSLA',
-                icon: '🚗',
-                color: '#e31837',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'GOOGL': {
-                name: '구글',
-                symbol: 'GOOGL',
-                market: 'GOOGL',
-                icon: '🔍',
-                color: '#4285f4',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'NVDA': {
-                name: '엔비디아',
-                symbol: 'NVDA',
-                market: 'NVDA',
-                icon: '🖥️',
-                color: '#76b900',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'SMR': {
-                name: '뉴스케일파워',
-                symbol: 'SMR',
-                market: 'SMR',
-                icon: '⚡',
-                color: '#ff6b35',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'NBVAF': {
-                name: '네비우스그룹',
-                symbol: 'NBVAF',
-                market: 'NBVAF',
-                icon: '🏢',
-                color: '#0066cc',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'MU': {
-                name: '마이크론',
-                symbol: 'MU',
-                market: 'MU',
-                icon: '💾',
-                color: '#9b59b6',
-                type: 'stock',
-                currency: 'USD'
+                currency: 'KRW',
+                icon: '🔷',
+                color: '#627eea'
             }
         };
         
