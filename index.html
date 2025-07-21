@@ -1933,11 +1933,20 @@
 
 📊 시장 데이터:
 현재가격: ${formatPrice(closes[closes.length-1])}
-최근 3개 가격: ${recentPrices.slice(-3).map(p => formatPrice(p)).join(' → ')}
-최근 RSI: ${recentRSI.slice(-3).map(r => r?.toFixed(1)).join(' → ')}
+최근 15개 가격 트렌드: ${recentPrices.map(p => formatPrice(p)).join(' → ')}
+최근 8개 RSI: ${recentRSI.map(r => r?.toFixed(1)).join(' → ')}
 이평선(20일): ${formatPrice(recentMA[recentMA.length-1])}
 전일 대비: ${priceChange}%
-이평선 괴리: ${maDistance}%${guidanceSection}
+이평선 괴리: ${maDistance}%
+
+📈 추가 분석 정보:
+최고가 (15일 내): ${formatPrice(Math.max(...recentPrices))}
+최저가 (15일 내): ${formatPrice(Math.min(...recentPrices))}
+고점 대비 하락률: ${(((Math.max(...recentPrices) - closes[closes.length-1]) / Math.max(...recentPrices)) * 100).toFixed(1)}%
+가격 변동성: ${((Math.max(...recentPrices) - Math.min(...recentPrices)) / Math.min(...recentPrices) * 100).toFixed(1)}%
+RSI 추세: ${recentRSI[recentRSI.length-1] > recentRSI[0] ? '상승' : '하락'}
+이동평균 방향: ${recentMA[recentMA.length-1] > recentMA[0] ? '상승' : '하락'}${guidanceSection}
+
 위 데이터와 지침을 바탕으로 다음 형식으로 답변:
 
 ${userGuidance ? `🎯 지침 답변: ${userGuidance}에 대한 구체적 답변
