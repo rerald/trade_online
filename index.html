@@ -2093,6 +2093,9 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                         console.log(`✅ ${currentCoin.symbol} Yahoo Finance 데이터 수신 완료:`, reversedData.length, '개 캔들');
                         console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
                         
+                        // Yahoo Finance 소스 표시
+                        updateDataSourceIndicator('yahoo', currentCoin.symbol);
+                        
                     } catch (error) {
                         // 모든 API 실패시 최신 실제 가격 기반 모의 데이터 사용
                         console.warn('모든 실시간 데이터 API 실패, 최신 시세 기반 모의 데이터 사용:', error);
@@ -2130,6 +2133,9 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                         });
                         
                         console.log(`📊 ${currentCoin.symbol} 모의 데이터 생성 완료 (기준가: $${basePrice})`);
+                        
+                        // 모의 데이터 소스 표시
+                        updateDataSourceIndicator('mock', currentCoin.symbol);
                     }
                 }
                 
@@ -2791,8 +2797,13 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 }))
                 .sort((a, b) => new Date(a.candle_date_time_kst) - new Date(b.candle_date_time_kst));
             
+            const latestDate = Object.keys(timeSeries)[0]; // 가장 최근 날짜
             console.log(`✅ ${symbol} Alpha Vantage 실시간 데이터 수신 완료:`, reversedData.length, '개 캔들');
             console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
+            console.log(`📅 최신 데이터 날짜: ${latestDate} (ET)`);
+            
+            // 데이터 소스 표시
+            updateDataSourceIndicator('alpha_vantage', symbol, latestDate);
             
             return reversedData;
         }
@@ -3002,6 +3013,118 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             
             console.log(`✅ ${symbol} Polygon 데이터 수신 완료:`, reversedData.length, '개 캔들');
             console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
+            
+            return reversedData;
+        }
+
+        // 데이터 소스 표시 업데이트
+        function updateDataSourceIndicator(source, symbol, timestamp = null) {
+            const statusEl = document.getElementById('status');
+            const currentTime = new Date().toLocaleString('ko-KR', { 
+                timeZone: 'Asia/Seoul',
+                year: 'numeric',
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const dataTime = timestamp ? new Date(timestamp).toLocaleString('ko-KR', {
+                timeZone: 'America/New_York',
+                month: '2-digit',
+                day: '2-digit', 
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '';
+            
+            let sourceInfo = '';
+            let color = '#4CAF50';
+            
+            switch(source) {
+                case 'alpha_vantage':
+                    sourceInfo = '🟢 Alpha Vantage (실시간)';
+                    color = '#4CAF50';
+                    break;
+                case 'twelve_data':
+                    sourceInfo = '🔵 Twelve Data (실시간)';
+                    color = '#2196F3';
+                    break;
+                case 'polygon':
+                    sourceInfo = '🟠 Polygon (실시간)';
+                    color = '#FF9800';
+                    break;
+                case 'yahoo':
+                    sourceInfo = '🟡 Yahoo Finance (지연 가능)';
+                    color = '#FFC107';
+                    break;
+                case 'mock':
+                    sourceInfo = '🟣 모의 데이터 (실제 가격 기반)';
+                    color = '#9C27B0';
+                    break;
+                default:
+                    sourceInfo = '❓ 알 수 없는 소스';
+                    color = '#999';
+            }
+            
+            if (statusEl) {
+                statusEl.innerHTML = `
+                    <div style="color: ${color}; font-weight: bold;">${sourceInfo}</div>
+                    <div style="font-size: 0.8em; color: #ccc; margin-top: 5px;">
+                        업데이트: ${currentTime} (KST)
+                        ${dataTime ? `<br>데이터 시점: ${dataTime} (ET)` : ''}
+                        ${symbol ? `<br>심볼: ${symbol}` : ''}
+                    </div>
+                `;
+            }
+        }
+
+        // Alpha Vantage API 수정 - 소스 표시 추가
+        async function fetchAlphaVantageData(symbol) {
+            if (!ALPHA_VANTAGE_API_KEY) {
+                throw new Error('Alpha Vantage API 키가 필요합니다');
+            }
+            
+            const apiUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}&outputsize=compact`;
+            
+            console.log(`📡 Alpha Vantage로 ${symbol} 실시간 데이터 요청 중...`);
+            
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Alpha Vantage API 호출 실패');
+            
+            const data = await response.json();
+            
+            if (data['Error Message']) {
+                throw new Error(`Alpha Vantage 오류: ${data['Error Message']}`);
+            }
+            
+            if (data['Note']) {
+                throw new Error('Alpha Vantage API 호출 한도 초과');
+            }
+            
+            const timeSeries = data['Time Series (Daily)'];
+            if (!timeSeries) {
+                throw new Error('Alpha Vantage 데이터를 찾을 수 없습니다');
+            }
+            
+            // 데이터 변환
+            const reversedData = Object.entries(timeSeries)
+                .map(([date, values]) => ({
+                    candle_date_time_kst: date + 'T00:00:00.000Z',
+                    trade_price: parseFloat(values['4. close']),
+                    high_price: parseFloat(values['2. high']),
+                    low_price: parseFloat(values['3. low']),
+                    opening_price: parseFloat(values['1. open']),
+                    candle_acc_trade_volume: parseInt(values['5. volume'])
+                }))
+                .sort((a, b) => new Date(a.candle_date_time_kst) - new Date(b.candle_date_time_kst));
+            
+            const latestDate = Object.keys(timeSeries)[0]; // 가장 최근 날짜
+            console.log(`✅ ${symbol} Alpha Vantage 실시간 데이터 수신 완료:`, reversedData.length, '개 캔들');
+            console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
+            console.log(`📅 최신 데이터 날짜: ${latestDate} (ET)`);
+            
+            // 데이터 소스 표시
+            updateDataSourceIndicator('alpha_vantage', symbol, latestDate);
             
             return reversedData;
         }
