@@ -416,7 +416,7 @@
             color: #666;
             min-width: 80px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
         
         .coin-btn.active {
@@ -425,52 +425,54 @@
             box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
         }
         
-        /* 매매 신호별 배경색 */
-        .coin-btn.signal-strong-buy {
-            background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
-            color: white;
+        /* 매매 신호 텍스트 오버레이 */
+        .coin-btn .signal-text {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+            pointer-events: none;
         }
         
-        .coin-btn.signal-buy {
-            background: linear-gradient(135deg, #52c41a, #73d13d) !important;
+        /* 매매 신호별 텍스트 스타일 */
+        .coin-btn.signal-strong-buy .signal-text,
+        .coin-btn.signal-buy .signal-text,
+        .coin-btn.signal-weak-buy .signal-text {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
             color: white;
+            opacity: 1;
         }
         
-        .coin-btn.signal-weak-buy {
-            background: linear-gradient(135deg, #95de64, #b7eb8f) !important;
+        .coin-btn.signal-strong-buy .signal-text::after { content: "강매수"; }
+        .coin-btn.signal-buy .signal-text::after { content: "매수"; }
+        .coin-btn.signal-weak-buy .signal-text::after { content: "약매수"; }
+        
+        .coin-btn.signal-hold .signal-text {
+            background: linear-gradient(135deg, #ffd93d, #22c1c3);
             color: #333;
+            opacity: 1;
         }
+        .coin-btn.signal-hold .signal-text::after { content: "관망"; }
         
-        .coin-btn.signal-hold {
-            background: linear-gradient(135deg, #ffd93d, #6bcf7f) !important;
-            color: #333;
-        }
-        
-        .coin-btn.signal-weak-sell {
-            background: linear-gradient(135deg, #ffa39e, #ff7875) !important;
+        .coin-btn.signal-weak-sell .signal-text,
+        .coin-btn.signal-sell .signal-text,
+        .coin-btn.signal-strong-sell .signal-text {
+            background: linear-gradient(135deg, #ff4d4f, #f5222d);
             color: white;
+            opacity: 1;
         }
         
-        .coin-btn.signal-sell {
-            background: linear-gradient(135deg, #ff4d4f, #f5222d) !important;
-            color: white;
-        }
-        
-        .coin-btn.signal-strong-sell {
-            background: linear-gradient(135deg, #cf1322, #a8071a) !important;
-            color: white;
-        }
-        
-        .coin-btn.active.signal-strong-buy,
-        .coin-btn.active.signal-buy,
-        .coin-btn.active.signal-weak-buy,
-        .coin-btn.active.signal-hold,
-        .coin-btn.active.signal-weak-sell,
-        .coin-btn.active.signal-sell,
-        .coin-btn.active.signal-strong-sell {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transform: translateY(-1px);
-        }
+        .coin-btn.signal-weak-sell .signal-text::after { content: "약매도"; }
+        .coin-btn.signal-sell .signal-text::after { content: "매도"; }
+        .coin-btn.signal-strong-sell .signal-text::after { content: "강매도"; }
         
         .coin-btn:hover:not(.active) {
             background: rgba(102, 126, 234, 0.1);
@@ -647,6 +649,13 @@
                 margin: 3px;
             }
             
+            /* 모바일에서 신호 텍스트 조정 */
+            .coin-btn .signal-text {
+                top: -20px;
+                font-size: 0.65em;
+                padding: 1px 6px;
+            }
+            
             .timeframe-selector {
                 justify-content: center;
             }
@@ -755,6 +764,13 @@
                 text-align: center;
             }
             
+            /* 작은 모바일에서 신호 텍스트 조정 */
+            .coin-btn .signal-text {
+                top: -18px;
+                font-size: 0.6em;
+                padding: 1px 5px;
+            }
+            
             .indicators {
                 grid-template-columns: 1fr;
                 gap: 10px;
@@ -784,6 +800,13 @@
                 width: 95%;
                 padding: 14px 18px;
                 font-size: 0.9em;
+            }
+            
+            /* 매우 작은 화면에서 신호 텍스트 조정 */
+            .coin-btn .signal-text {
+                top: -16px;
+                font-size: 0.55em;
+                padding: 1px 4px;
             }
             
             .chart-container {
@@ -817,27 +840,33 @@
 • 각각의 기술적 지표
 • 맞춤형 AI 분석
 • 실시간 데이터 업데이트">
-                <button class="coin-btn active" data-coin="BTC">
+                <button class="coin-btn active" data-coin="BTC" onclick="selectCoin('BTC')">
+                    <span class="signal-text"></span>
                     <span class="coin-icon">🟠</span>
                     <span class="coin-name">비트코인</span>
                 </button>
-                <button class="coin-btn" data-coin="ETH">
+                <button class="coin-btn" data-coin="ETH" onclick="selectCoin('ETH')">
+                    <span class="signal-text"></span>
                     <span class="coin-icon">🔷</span>
                     <span class="coin-name">이더리움</span>
                 </button>
-                <button class="coin-btn" data-coin="XRP">
+                <button class="coin-btn" data-coin="XRP" onclick="selectCoin('XRP')">
+                    <span class="signal-text"></span>
                     <span class="coin-icon">💧</span>
                     <span class="coin-name">엑스알피</span>
                 </button>
-                <button class="coin-btn" data-coin="DOGE">
+                <button class="coin-btn" data-coin="DOGE" onclick="selectCoin('DOGE')">
+                    <span class="signal-text"></span>
                     <span class="coin-icon">🐶</span>
                     <span class="coin-name">도지코인</span>
                 </button>
-                <button class="coin-btn" data-coin="SOL">
+                <button class="coin-btn" data-coin="SOL" onclick="selectCoin('SOL')">
+                    <span class="signal-text"></span>
                     <span class="coin-icon">🌞</span>
                     <span class="coin-name">솔라나</span>
                 </button>
-                <button class="coin-btn" data-coin="TRUMP">
+                <button class="coin-btn" data-coin="TRUMP" onclick="selectCoin('TRUMP')">
+                    <span class="signal-text"></span>
                     <span class="coin-icon">🇺🇸</span>
                     <span class="coin-name">오피셜트럼프</span>
                 </button>
@@ -2385,10 +2414,10 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     signalListElement.textContent = '현재 명확한 신호 없음';
                 }
                 
-                // 현재 선택된 종목의 버튼 색상을 즉시 동기화
+                // 현재 선택된 종목의 버튼 신호 텍스트를 즉시 동기화
                 updateCurrentCoinButtonColor(analysis);
                 
-                // 강제 버튼 색상 업데이트 (추가 보장)
+                // 강제 버튼 신호 텍스트 업데이트 (추가 보장)
                 if (analysis.signal && analysis.confidence) {
                     setTimeout(() => {
                         forceUpdateButtonColor(selectedCoin, analysis);
@@ -2485,11 +2514,11 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
         // 신호 강도별 CSS 클래스 반환
         function getSignalClass(signal, confidence) {
             if (signal === '매수') {
-                if (confidence >= 85) return 'signal-strong-buy';
+                if (confidence >= 80) return 'signal-strong-buy';
                 else if (confidence >= 70) return 'signal-buy';
                 else return 'signal-weak-buy';
             } else if (signal === '매도') {
-                if (confidence >= 85) return 'signal-strong-sell';
+                if (confidence >= 80) return 'signal-strong-sell';
                 else if (confidence >= 70) return 'signal-sell';
                 else return 'signal-weak-sell';
             } else {
@@ -2570,17 +2599,16 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             }
         }
         
-        // 현재 선택된 종목 버튼 색상 즉시 업데이트
+        // 현재 선택된 종목 버튼 신호 텍스트 즉시 업데이트
         function updateCurrentCoinButtonColor(analysis) {
-            const btnId = selectedCoin.toLowerCase() + 'Btn';
-            const btn = document.getElementById(btnId);
+            const btn = document.querySelector(`[data-coin="${selectedCoin}"]`);
             
             if (btn && analysis) {
                 // 기존 신호 클래스 제거
                 btn.classList.remove('signal-strong-buy', 'signal-buy', 'signal-weak-buy', 
                                    'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell');
                 
-                // 새로운 신호 클래스 추가
+                // 새로운 신호 클래스 추가 (CSS에서 자동으로 텍스트 표시)
                 const signalClass = getSignalClass(analysis.signal, analysis.confidence);
                 btn.classList.add(signalClass);
                 
@@ -2593,26 +2621,25 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     btn.setAttribute('data-original-tooltip', originalTitle);
                 }
                 
-                console.log(`✅ ${selectedCoin} 버튼 색상 업데이트: ${analysis.signal} (${analysis.confidence}%)`);
+                console.log(`✅ ${selectedCoin} 버튼 신호 텍스트 업데이트: ${analysis.signal} (${analysis.confidence}%)`);
             }
         }
         
-        // 모든 종목의 버튼 색상 업데이트 (현재 선택된 종목 제외)
+        // 모든 종목의 버튼 신호 텍스트 업데이트 (현재 선택된 종목 제외)
         async function updateAllSignalColors() {
             const symbols = Object.keys(coinInfo).filter(symbol => symbol !== selectedCoin);
             
             for (const symbol of symbols) {
                 try {
                     const analysis = await analyzeSymbolSignal(symbol);
-                    const btnId = symbol.toLowerCase() + 'Btn';
-                    const btn = document.getElementById(btnId);
+                    const btn = document.querySelector(`[data-coin="${symbol}"]`);
                     
                     if (btn) {
                         // 기존 신호 클래스 제거
                         btn.classList.remove('signal-strong-buy', 'signal-buy', 'signal-weak-buy', 
                                            'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell');
                         
-                        // 새로운 신호 클래스 추가
+                        // 새로운 신호 클래스 추가 (CSS에서 자동으로 텍스트 표시)
                         const signalClass = getSignalClass(analysis.signal, analysis.confidence);
                         btn.classList.add(signalClass);
                         
@@ -2630,14 +2657,14 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     await new Promise(resolve => setTimeout(resolve, 200));
                     
                 } catch (error) {
-                    console.warn(`${symbol} 색상 업데이트 실패:`, error);
+                    console.warn(`${symbol} 신호 텍스트 업데이트 실패:`, error);
                 }
             }
             
-            console.log('✅ 모든 종목 신호 색상 업데이트 완료');
+            console.log('✅ 모든 종목 신호 텍스트 업데이트 완료');
         }
         
-        // 신호 색상 업데이트 간격 (5분마다)
+        // 신호 텍스트 업데이트 간격 (5분마다)
         let signalUpdateInterval;
         
         // API 키 관리 함수들
@@ -2761,10 +2788,10 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             const tfInfo = timeframeInfo[selectedTimeframe];
             updateInterval = setInterval(draw, tfInfo.updateInterval);
             
-            // 신호 색상 초기 업데이트 (3초 후 시작)
+            // 신호 텍스트 초기 업데이트 (3초 후 시작)
             setTimeout(() => {
                 updateAllSignalColors();
-                // 5분마다 신호 색상 업데이트
+                // 5분마다 신호 텍스트 업데이트
                 signalUpdateInterval = setInterval(updateAllSignalColors, 5 * 60 * 1000);
             }, 3000);
         };
@@ -3229,7 +3256,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             return 'signal-hold';
         }
 
-                 // 강제 버튼 색상 업데이트 (가장 강력한 방법)
+                 // 신호 텍스트 업데이트 (색깔 대신 텍스트 표시)
          function forceUpdateButtonColor(coin, analysisData) {
              const btnElement = document.querySelector(`[data-coin="${coin}"]`);
              if (!btnElement) {
@@ -3240,9 +3267,9 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
              const signal = analysisData.signal;
              const confidence = analysisData.confidence || 50;
              
-             console.log(`🔄 ${coin} 강제 색상 업데이트 시작:`, { signal, confidence });
+             console.log(`🔄 ${coin} 신호 텍스트 업데이트 시작:`, { signal, confidence });
              
-             // 모든 신호 클래스 강제 제거
+             // 모든 신호 클래스 제거
              const allSignalClasses = [
                  'signal-strong-buy', 'signal-buy', 'signal-weak-buy',
                  'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell'
@@ -3254,44 +3281,24 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
              
              // 새로운 클래스 결정 및 추가
              let targetClass = 'signal-hold';
-             if (signal === 'BUY') {
+             if (signal === '매수') {
                  if (confidence >= 80) targetClass = 'signal-strong-buy';
-                 else if (confidence >= 60) targetClass = 'signal-buy';
+                 else if (confidence >= 70) targetClass = 'signal-buy';
                  else targetClass = 'signal-weak-buy';
-             } else if (signal === 'SELL') {
+             } else if (signal === '매도') {
                  if (confidence >= 80) targetClass = 'signal-strong-sell';
-                 else if (confidence >= 60) targetClass = 'signal-sell';
+                 else if (confidence >= 70) targetClass = 'signal-sell';
                  else targetClass = 'signal-weak-sell';
              }
              
-             // 클래스 추가
+             // 클래스 추가 (CSS에서 자동으로 텍스트 표시됨)
              btnElement.classList.add(targetClass);
              
-             // 시각적 피드백을 위한 스타일 직접 적용
-             if (signal === 'SELL' && confidence >= 80) {
-                 btnElement.style.background = 'linear-gradient(135deg, #8b0000, #dc143c)';
-                 btnElement.style.border = '2px solid #8b0000';
-                 btnElement.style.color = 'white';
-             } else if (signal === 'SELL' && confidence >= 60) {
-                 btnElement.style.background = 'linear-gradient(135deg, #c0392b, #e74c3c)';
-                 btnElement.style.border = '2px solid #c0392b';
-                 btnElement.style.color = 'white';
-             } else if (signal === 'BUY' && confidence >= 80) {
-                 btnElement.style.background = 'linear-gradient(135deg, #27ae60, #2ecc71)';
-                 btnElement.style.border = '2px solid #27ae60';
-                 btnElement.style.color = 'white';
-             } else if (signal === 'BUY' && confidence >= 60) {
-                 btnElement.style.background = 'linear-gradient(135deg, #16a085, #1abc9c)';
-                 btnElement.style.border = '2px solid #16a085';
-                 btnElement.style.color = 'white';
-             }
-             
-             console.log(`✅ ${coin} 색상 업데이트 완료: ${targetClass} (${signal} ${confidence}%)`);
+             console.log(`✅ ${coin} 신호 텍스트 업데이트 완료: ${targetClass} (${signal} ${confidence}%)`);
              
              // 툴팁 업데이트
-             const signalText = signal === 'BUY' ? '매수' : signal === 'SELL' ? '매도' : '보유';
              btnElement.setAttribute('title', 
-                 `${coinInfo[coin].name}\n신호: ${signalText} (${confidence}%)\n업데이트: ${new Date().toLocaleTimeString('ko-KR')}`);
+                 `${coinInfo[coin].name}\n신호: ${signal} (${confidence}%)\n업데이트: ${new Date().toLocaleTimeString('ko-KR')}`);
          }
 
          // 단일 코인 버튼 색상 업데이트
@@ -3306,13 +3313,12 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                      'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell'
                  );
                  
-                 // 새로운 신호 클래스 추가
+                 // 새로운 신호 클래스 추가 (CSS에서 자동으로 텍스트 표시)
                  const signalClass = getSignalClass(signalData.signal, signalData.confidence);
                  btnElement.classList.add(signalClass);
                  
                  // 툴팁에 신호 정보 추가
-                 const signalText = signalData.signal === 'BUY' ? '매수' : 
-                                  signalData.signal === 'SELL' ? '매도' : '보유';
+                 const signalText = signalData.signal;
                  const confidenceText = `${signalData.confidence}%`;
                  const timeText = signalData.lastUpdate ? 
                      new Date(signalData.lastUpdate).toLocaleTimeString('ko-KR') : '분석 대기';
@@ -3320,7 +3326,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                  btnElement.setAttribute('title', 
                      `${coinInfo[coin].name}\n신호: ${signalText} (${confidenceText})\n업데이트: ${timeText}`);
                      
-                 console.log(`${coin} 버튼 색상 업데이트: ${signalClass} (${signalText} ${confidenceText})`);
+                 console.log(`${coin} 버튼 신호 텍스트 업데이트: ${signalClass} (${signalText} ${confidenceText})`);
              }
          }
 
