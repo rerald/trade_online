@@ -1206,6 +1206,16 @@
         // 현재 선택된 시간 프레임 (기본값: 일봉)
         let selectedTimeframe = '1d';
         
+        // 모든 코인의 신호 분석 결과 저장
+        let allCoinSignals = {
+            'BTC': { signal: 'HOLD', confidence: 0, lastUpdate: null },
+            'ETH': { signal: 'HOLD', confidence: 0, lastUpdate: null },
+            'XRP': { signal: 'HOLD', confidence: 0, lastUpdate: null },
+            'DOGE': { signal: 'HOLD', confidence: 0, lastUpdate: null },
+            'SOL': { signal: 'HOLD', confidence: 0, lastUpdate: null },
+            'TRUMP': { signal: 'HOLD', confidence: 0, lastUpdate: null }
+        };
+        
         // 코인/주식별 정보
         const coinInfo = {
             'BTC': {
@@ -3098,6 +3108,171 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             return reversedData;
         }
 
+        // 신호 강도에 따른 CSS 클래스 매핑
+        function getSignalClass(signal, confidence) {
+            const normalizedConfidence = confidence / 100; // 0-1 범위로 정규화
+            
+            if (signal === 'BUY') {
+                if (normalizedConfidence >= 0.8) return 'signal-strong-buy';
+                else if (normalizedConfidence >= 0.6) return 'signal-buy';
+                else return 'signal-weak-buy';
+            } else if (signal === 'SELL') {
+                if (normalizedConfidence >= 0.8) return 'signal-strong-sell';
+                else if (normalizedConfidence >= 0.6) return 'signal-sell';
+                else return 'signal-weak-sell';
+            }
+            return 'signal-hold';
+        }
+
+        // 모든 코인 버튼 색상 업데이트
+        function updateAllCoinButtonColors() {
+            Object.keys(allCoinSignals).forEach(coin => {
+                const btnElement = document.querySelector(`[data-coin="${coin}"]`);
+                if (btnElement) {
+                    const signalData = allCoinSignals[coin];
+                    
+                    // 기존 신호 클래스 제거
+                    btnElement.classList.remove(
+                        'signal-strong-buy', 'signal-buy', 'signal-weak-buy',
+                        'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell'
+                    );
+                    
+                    // 새로운 신호 클래스 추가
+                    const signalClass = getSignalClass(signalData.signal, signalData.confidence);
+                    btnElement.classList.add(signalClass);
+                    
+                    // 툴팁에 신호 정보 추가
+                    const signalText = signalData.signal === 'BUY' ? '매수' : 
+                                     signalData.signal === 'SELL' ? '매도' : '보유';
+                    const confidenceText = `${signalData.confidence}%`;
+                    const timeText = signalData.lastUpdate ? 
+                        new Date(signalData.lastUpdate).toLocaleTimeString('ko-KR') : '분석 대기';
+                    
+                    btnElement.setAttribute('title', 
+                        `${coinInfo[coin].name}\n신호: ${signalText} (${confidenceText})\n업데이트: ${timeText}`);
+                }
+            });
+        }
+
+        // 단일 코인의 신호 분석 수행
+        async function analyzeCoinSignal(coin, data) {
+            try {
+                if (!data || data.length < 14) {
+                    console.log(`${coin}: 분석을 위한 충분한 데이터가 없습니다.`);
+                    return;
+                }
+
+                const closes = data.map(d => d.trade_price);
+                const volumes = data.map(d => d.candle_acc_trade_volume);
+                
+                // 기술적 지표 계산
+                const rsi = calculateRSI(closes, 14);
+                const macd = calculateMACD(closes);
+                const bollinger = calculateBollingerBands(closes, 20, 2);
+                const sma20 = calculateSMA(closes, 20);
+                const sma60 = calculateSMA(closes, 60);
+                
+                if (rsi.length === 0 || macd.length === 0) {
+                    console.log(`${coin}: 지표 계산 실패`);
+                    return;
+                }
+
+                const currentPrice = closes[closes.length - 1];
+                const currentRSI = rsi[rsi.length - 1];
+                const currentMACD = macd[macd.length - 1];
+                const currentBB = bollinger[bollinger.length - 1];
+                const currentSMA20 = sma20[sma20.length - 1];
+                const currentSMA60 = sma60[sma60.length - 1];
+
+                // 신호 분석 로직
+                let buySignals = 0;
+                let sellSignals = 0;
+                let totalSignals = 0;
+
+                // RSI 분석
+                if (currentRSI < 30) buySignals += 2; // 과매도
+                else if (currentRSI < 40) buySignals += 1;
+                else if (currentRSI > 70) sellSignals += 2; // 과매수
+                else if (currentRSI > 60) sellSignals += 1;
+                totalSignals += 2;
+
+                // MACD 분석
+                if (currentMACD.macd > currentMACD.signal) buySignals += 1;
+                else sellSignals += 1;
+                totalSignals += 1;
+
+                // 볼린저밴드 분석
+                if (currentPrice < currentBB.lower) buySignals += 2;
+                else if (currentPrice > currentBB.upper) sellSignals += 2;
+                else if (currentPrice < currentBB.middle) sellSignals += 1;
+                else buySignals += 1;
+                totalSignals += 2;
+
+                // 이동평균 분석
+                if (currentPrice > currentSMA20 && currentSMA20 > currentSMA60) buySignals += 2;
+                else if (currentPrice < currentSMA20 && currentSMA20 < currentSMA60) sellSignals += 2;
+                totalSignals += 2;
+
+                // 신호 결정
+                let signal = 'HOLD';
+                let confidence = 0;
+
+                if (buySignals > sellSignals) {
+                    signal = 'BUY';
+                    confidence = Math.round((buySignals / totalSignals) * 100);
+                } else if (sellSignals > buySignals) {
+                    signal = 'SELL';
+                    confidence = Math.round((sellSignals / totalSignals) * 100);
+                } else {
+                    signal = 'HOLD';
+                    confidence = 50;
+                }
+
+                // 결과 저장
+                allCoinSignals[coin] = {
+                    signal: signal,
+                    confidence: confidence,
+                    lastUpdate: new Date().toISOString()
+                };
+
+                console.log(`${coin} 신호 분석 완료: ${signal} (${confidence}%)`);
+                
+            } catch (error) {
+                console.error(`${coin} 신호 분석 중 오류:`, error);
+            }
+        }
+
+        // 모든 코인 신호 분석 수행
+        async function analyzeAllCoinSignals() {
+            console.log('모든 코인 신호 분석 시작...');
+            
+            for (const coin of Object.keys(coinInfo)) {
+                try {
+                    const coinData = coinInfo[coin];
+                    if (coinData.type === 'crypto') {
+                        const url = `https://api.upbit.com/v1/candles/days?market=${coinData.market}&count=120`;
+                        const response = await fetch(url);
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            await analyzeCoinSignal(coin, data.reverse()); // 오래된 데이터부터 정렬
+                        } else {
+                            console.error(`${coin} 데이터 가져오기 실패:`, response.status);
+                        }
+                    }
+                } catch (error) {
+                    console.error(`${coin} 분석 중 오류:`, error);
+                }
+                
+                // API 호출 간격 조절 (과도한 요청 방지)
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            // 모든 분석 완료 후 버튼 색상 업데이트
+            updateAllCoinButtonColors();
+            console.log('모든 코인 신호 분석 완료');
+        }
+
         // 코인 버튼 클릭 이벤트 설정
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.coin-btn').forEach(btn => {
@@ -3106,6 +3281,16 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     selectCoin(coin);
                 });
             });
+            
+            // 초기 신호 분석 수행
+            setTimeout(() => {
+                analyzeAllCoinSignals();
+            }, 2000);
+            
+            // 5분마다 모든 코인 신호 재분석
+            setInterval(() => {
+                analyzeAllCoinSignals();
+            }, 5 * 60 * 1000); // 5분
         });
     </script>
 </body>
