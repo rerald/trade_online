@@ -2796,6 +2796,215 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             
             return reversedData;
         }
+
+        // 추가 API 키들
+        let TWELVE_DATA_API_KEY = localStorage.getItem('twelveDataApiKey') || '';
+        let POLYGON_API_KEY = localStorage.getItem('polygonApiKey') || '';
+        let FINNHUB_API_KEY = localStorage.getItem('finnhubApiKey') || '';
+
+        // 확장된 API 키 설정 모달
+        function showApiModal() {
+            const modal = document.getElementById('apiModal');
+            const content = modal.querySelector('.api-modal-content');
+            
+            content.innerHTML = `
+                <span class="close" onclick="closeApiModal()">&times;</span>
+                <h2>🔑 다양한 API 서비스 설정</h2>
+                
+                <div class="api-section">
+                    <h3>🤖 OpenAI (AI 분석용)</h3>
+                    <input type="password" id="apiKeyInput" placeholder="sk-..." 
+                           value="${OPENAI_API_KEY}" style="width: 100%; padding: 10px; margin: 10px 0;">
+                    <p style="color: #ccc; font-size: 0.9em;">AI 분석 기능을 위한 OpenAI API 키</p>
+                </div>
+                
+                <div class="api-section">
+                    <h3>📈 주식 데이터 API (선택사항)</h3>
+                    
+                    <div style="margin: 15px 0;">
+                        <label style="color: #4CAF50; font-weight: bold;">Alpha Vantage (추천 #1)</label>
+                        <input type="password" id="alphaVantageKeyInput" placeholder="YOUR_API_KEY" 
+                               value="${ALPHA_VANTAGE_API_KEY}" style="width: 100%; padding: 8px; margin: 5px 0;">
+                        <small style="color: #999;">무료: 25회/일 | <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color: #4CAF50;">가입하기</a></small>
+                    </div>
+                    
+                    <div style="margin: 15px 0;">
+                        <label style="color: #2196F3; font-weight: bold;">Twelve Data (추천 #2)</label>
+                        <input type="password" id="twelveDataKeyInput" placeholder="YOUR_API_KEY" 
+                               value="${TWELVE_DATA_API_KEY}" style="width: 100%; padding: 8px; margin: 5px 0;">
+                        <small style="color: #999;">무료: 800회/월 | <a href="https://twelvedata.com/" target="_blank" style="color: #2196F3;">가입하기</a></small>
+                    </div>
+                    
+                    <div style="margin: 15px 0;">
+                        <label style="color: #FF9800; font-weight: bold;">Polygon.io</label>
+                        <input type="password" id="polygonKeyInput" placeholder="YOUR_API_KEY" 
+                               value="${POLYGON_API_KEY}" style="width: 100%; padding: 8px; margin: 5px 0;">
+                        <small style="color: #999;">무료: 1,000회/월 | <a href="https://polygon.io/" target="_blank" style="color: #FF9800;">가입하기</a></small>
+                    </div>
+                    
+                    <div style="margin: 15px 0;">
+                        <label style="color: #9C27B0; font-weight: bold;">Finnhub</label>
+                        <input type="password" id="finnhubKeyInput" placeholder="YOUR_API_KEY" 
+                               value="${FINNHUB_API_KEY}" style="width: 100%; padding: 8px; margin: 5px 0;">
+                        <small style="color: #999;">무료: 60회/월 | <a href="https://finnhub.io/" target="_blank" style="color: #9C27B0;">가입하기</a></small>
+                    </div>
+                </div>
+                
+                <button onclick="saveApiKeys()" 
+                        style="background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin: 10px 0;">
+                    💾 저장
+                </button>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(76, 175, 80, 0.1); border-radius: 5px;">
+                    <h4>🎯 서비스 선택 가이드:</h4>
+                    <ul style="color: #ccc; text-align: left; font-size: 0.9em;">
+                        <li><strong>Alpha Vantage</strong>: 가장 안정적, 일 25회 무료</li>
+                        <li><strong>Twelve Data</strong>: 월 800회로 넉넉, 글로벌 커버</li>
+                        <li><strong>Polygon</strong>: 실시간 특화, 옵션 데이터 포함</li>
+                        <li><strong>Finnhub</strong>: 뉴스+감정분석 추가</li>
+                        <li>하나만 설정해도 충분합니다!</li>
+                    </ul>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: rgba(255, 193, 7, 0.1); border-radius: 5px;">
+                        <h5 style="color: #FFC107; margin: 0 0 10px 0;">⚠️ Yahoo Finance 참고사항:</h5>
+                        <ul style="color: #ccc; font-size: 0.8em; margin: 5px 0;">
+                            <li>Yahoo Finance는 공식 유료 API를 제공하지 않습니다</li>
+                            <li>현재 무료 웹사이트만 운영 중 (2017년 API 중단)</li>
+                            <li>정확한 실시간 데이터는 위 공식 API들을 권장합니다</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function saveApiKeys() {
+            const openaiKey = document.getElementById('apiKeyInput').value.trim();
+            const alphaVantageKey = document.getElementById('alphaVantageKeyInput').value.trim();
+            const twelveDataKey = document.getElementById('twelveDataKeyInput').value.trim();
+            const polygonKey = document.getElementById('polygonKeyInput').value.trim();
+            const finnhubKey = document.getElementById('finnhubKeyInput').value.trim();
+            
+            if (openaiKey) {
+                OPENAI_API_KEY = openaiKey;
+                localStorage.setItem('openaiApiKey', openaiKey);
+            }
+            
+            if (alphaVantageKey) {
+                ALPHA_VANTAGE_API_KEY = alphaVantageKey;
+                localStorage.setItem('alphaVantageApiKey', alphaVantageKey);
+            }
+            
+            if (twelveDataKey) {
+                TWELVE_DATA_API_KEY = twelveDataKey;
+                localStorage.setItem('twelveDataApiKey', twelveDataKey);
+            }
+            
+            if (polygonKey) {
+                POLYGON_API_KEY = polygonKey;
+                localStorage.setItem('polygonApiKey', polygonKey);
+            }
+            
+            if (finnhubKey) {
+                FINNHUB_API_KEY = finnhubKey;
+                localStorage.setItem('finnhubApiKey', finnhubKey);
+            }
+            
+            closeApiModal();
+            
+            // 성공 메시지
+            const statusEl = document.getElementById('status');
+            if (statusEl) {
+                statusEl.innerHTML = '✅ API 키가 저장되었습니다!';
+                setTimeout(() => {
+                    statusEl.innerHTML = '준비 완료';
+                }, 2000);
+            }
+        }
+
+        // Twelve Data API로 주식 데이터 가져오기
+        async function fetchTwelveData(symbol) {
+            if (!TWELVE_DATA_API_KEY) {
+                throw new Error('Twelve Data API 키가 필요합니다');
+            }
+            
+            const apiUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=${TWELVE_DATA_API_KEY}&outputsize=100`;
+            
+            console.log(`📡 Twelve Data로 ${symbol} 데이터 요청 중...`);
+            
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Twelve Data API 호출 실패');
+            
+            const data = await response.json();
+            
+            if (data.status === 'error') {
+                throw new Error(`Twelve Data 오류: ${data.message}`);
+            }
+            
+            const values = data.values;
+            if (!values) {
+                throw new Error('Twelve Data에서 데이터를 찾을 수 없습니다');
+            }
+            
+            // 데이터 변환
+            const reversedData = values.map(item => ({
+                candle_date_time_kst: item.datetime + 'T00:00:00.000Z',
+                trade_price: parseFloat(item.close),
+                high_price: parseFloat(item.high),
+                low_price: parseFloat(item.low),
+                opening_price: parseFloat(item.open),
+                candle_acc_trade_volume: parseInt(item.volume || 0)
+            })).reverse();
+            
+            console.log(`✅ ${symbol} Twelve Data 수신 완료:`, reversedData.length, '개 캔들');
+            console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
+            
+            return reversedData;
+        }
+
+        // Polygon.io API로 주식 데이터 가져오기
+        async function fetchPolygonData(symbol) {
+            if (!POLYGON_API_KEY) {
+                throw new Error('Polygon API 키가 필요합니다');
+            }
+            
+            const endDate = new Date().toISOString().split('T')[0];
+            const startDate = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            
+            const apiUrl = `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/${startDate}/${endDate}?apikey=${POLYGON_API_KEY}`;
+            
+            console.log(`📡 Polygon으로 ${symbol} 데이터 요청 중...`);
+            
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Polygon API 호출 실패');
+            
+            const data = await response.json();
+            
+            if (data.status !== 'OK') {
+                throw new Error(`Polygon 오류: ${data.error || 'Unknown error'}`);
+            }
+            
+            const results = data.results;
+            if (!results) {
+                throw new Error('Polygon에서 데이터를 찾을 수 없습니다');
+            }
+            
+            // 데이터 변환
+            const reversedData = results.map(item => ({
+                candle_date_time_kst: new Date(item.t).toISOString(),
+                trade_price: item.c,
+                high_price: item.h,
+                low_price: item.l,
+                opening_price: item.o,
+                candle_acc_trade_volume: item.v
+            }));
+            
+            console.log(`✅ ${symbol} Polygon 데이터 수신 완료:`, reversedData.length, '개 캔들');
+            console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
+            
+            return reversedData;
+        }
     </script>
 </body>
 </html> 
