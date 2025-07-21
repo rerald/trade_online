@@ -2432,10 +2432,10 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     data = await response.json();
                     data = data.reverse();
                 } else {
-                    // 주식: 모의 데이터 (실제로는 Yahoo Finance API 사용 가능)
+                    // 주식: 2024년 12월 실제 시세 기반 모의 데이터
                     const basePrices = {
-                        'TSLA': 250, 'GOOGL': 150, 'NVDA': 500,
-                        'SMR': 12, 'NBVAF': 15, 'MU': 100
+                        'SAMSUNG': 55000, 'TSLA': 460, 'GOOGL': 175, 'NVDA': 140,
+                        'SMR': 11, 'NBVAF': 3.5, 'MU': 115
                     };
                     const basePrice = basePrices[symbol] || 150;
                     

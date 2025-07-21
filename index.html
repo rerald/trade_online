@@ -2678,6 +2678,124 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 signalUpdateInterval = setInterval(updateAllSignalColors, 5 * 60 * 1000);
             }, 3000);
         };
+
+        // Alpha Vantage API 키 설정
+        let ALPHA_VANTAGE_API_KEY = localStorage.getItem('alphaVantageApiKey') || '';
+
+        // API 키 설정 모달에 Alpha Vantage 추가
+        function showApiModal() {
+            const modal = document.getElementById('apiModal');
+            const content = modal.querySelector('.api-modal-content');
+            
+            content.innerHTML = `
+                <span class="close" onclick="closeApiModal()">&times;</span>
+                <h2>🔑 API 키 설정</h2>
+                
+                <div class="api-section">
+                    <h3>🤖 OpenAI (AI 분석용)</h3>
+                    <input type="password" id="apiKeyInput" placeholder="sk-..." 
+                           value="${OPENAI_API_KEY}" style="width: 100%; padding: 10px; margin: 10px 0;">
+                    <p style="color: #ccc; font-size: 0.9em;">AI 분석 기능을 위한 OpenAI API 키</p>
+                </div>
+                
+                <div class="api-section">
+                    <h3>📈 Alpha Vantage (미국 주식 실시간 데이터)</h3>
+                    <input type="password" id="alphaVantageKeyInput" placeholder="YOUR_API_KEY" 
+                           value="${ALPHA_VANTAGE_API_KEY}" style="width: 100%; padding: 10px; margin: 10px 0;">
+                    <p style="color: #ccc; font-size: 0.9em;">
+                        무료 API 키: <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color: #4CAF50;">여기서 발급</a> (월 25회 무료)
+                    </p>
+                </div>
+                
+                <button onclick="saveApiKeys()" 
+                        style="background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin: 10px 0;">
+                    💾 저장
+                </button>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(76, 175, 80, 0.1); border-radius: 5px;">
+                    <h4>🎯 추천 설정:</h4>
+                    <ul style="color: #ccc; text-align: left;">
+                        <li><strong>OpenAI</strong>: AI 기술적 분석 (GPT-3.5)</li>
+                        <li><strong>Alpha Vantage</strong>: 실제 미국 주식 실시간 데이터</li>
+                        <li>모두 무료 플랜으로 시작 가능</li>
+                    </ul>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function saveApiKeys() {
+            const openaiKey = document.getElementById('apiKeyInput').value.trim();
+            const alphaVantageKey = document.getElementById('alphaVantageKeyInput').value.trim();
+            
+            if (openaiKey) {
+                OPENAI_API_KEY = openaiKey;
+                localStorage.setItem('openaiApiKey', openaiKey);
+            }
+            
+            if (alphaVantageKey) {
+                ALPHA_VANTAGE_API_KEY = alphaVantageKey;
+                localStorage.setItem('alphaVantageApiKey', alphaVantageKey);
+            }
+            
+            closeApiModal();
+            
+            // 성공 메시지
+            const statusEl = document.getElementById('status');
+            if (statusEl) {
+                statusEl.innerHTML = '✅ API 키가 저장되었습니다!';
+                setTimeout(() => {
+                    statusEl.innerHTML = '준비 완료';
+                }, 2000);
+            }
+        }
+
+        // Alpha Vantage API로 실제 미국 주식 데이터 가져오기
+        async function fetchAlphaVantageData(symbol) {
+            if (!ALPHA_VANTAGE_API_KEY) {
+                throw new Error('Alpha Vantage API 키가 필요합니다');
+            }
+            
+            const apiUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}&outputsize=compact`;
+            
+            console.log(`📡 Alpha Vantage로 ${symbol} 실시간 데이터 요청 중...`);
+            
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Alpha Vantage API 호출 실패');
+            
+            const data = await response.json();
+            
+            if (data['Error Message']) {
+                throw new Error(`Alpha Vantage 오류: ${data['Error Message']}`);
+            }
+            
+            if (data['Note']) {
+                throw new Error('Alpha Vantage API 호출 한도 초과');
+            }
+            
+            const timeSeries = data['Time Series (Daily)'];
+            if (!timeSeries) {
+                throw new Error('Alpha Vantage 데이터를 찾을 수 없습니다');
+            }
+            
+            // 데이터 변환
+            const reversedData = Object.entries(timeSeries)
+                .map(([date, values]) => ({
+                    candle_date_time_kst: date + 'T00:00:00.000Z',
+                    trade_price: parseFloat(values['4. close']),
+                    high_price: parseFloat(values['2. high']),
+                    low_price: parseFloat(values['3. low']),
+                    opening_price: parseFloat(values['1. open']),
+                    candle_acc_trade_volume: parseInt(values['5. volume'])
+                }))
+                .sort((a, b) => new Date(a.candle_date_time_kst) - new Date(b.candle_date_time_kst));
+            
+            console.log(`✅ ${symbol} Alpha Vantage 실시간 데이터 수신 완료:`, reversedData.length, '개 캔들');
+            console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
+            
+            return reversedData;
+        }
     </script>
 </body>
 </html> 
