@@ -817,13 +817,30 @@
 • 각각의 기술적 지표
 • 맞춤형 AI 분석
 • 실시간 데이터 업데이트">
-                <button class="coin-btn active" id="btcBtn" onclick="selectCoin('BTC')">
-                    <span class="coin-icon">🟠</span>비트코인
+                <button class="coin-btn active" data-coin="BTC">
+                    <span class="coin-icon">🟠</span>
+                    <span class="coin-name">비트코인</span>
                 </button>
-                <button class="coin-btn" id="ethBtn" onclick="selectCoin('ETH')">
-                    <span class="coin-icon">🔷</span>이더리움
+                <button class="coin-btn" data-coin="ETH">
+                    <span class="coin-icon">🔷</span>
+                    <span class="coin-name">이더리움</span>
                 </button>
-
+                <button class="coin-btn" data-coin="XRP">
+                    <span class="coin-icon">💧</span>
+                    <span class="coin-name">엑스알피</span>
+                </button>
+                <button class="coin-btn" data-coin="DOGE">
+                    <span class="coin-icon">🐶</span>
+                    <span class="coin-name">도지코인</span>
+                </button>
+                <button class="coin-btn" data-coin="SOL">
+                    <span class="coin-icon">🌞</span>
+                    <span class="coin-name">솔라나</span>
+                </button>
+                <button class="coin-btn" data-coin="TRUMP">
+                    <span class="coin-icon">🇺🇸</span>
+                    <span class="coin-name">오피셜트럼프</span>
+                </button>
             </div>
             
             <!-- 시간 프레임 선택 -->
@@ -1300,8 +1317,8 @@
         // 코인 선택 함수
         function selectCoin(coin) {
             // 이전 선택 해제
-            document.getElementById('btcBtn').classList.remove('active');
-            document.getElementById('ethBtn').classList.remove('active');
+            // 모든 버튼의 active 클래스 제거
+            document.querySelectorAll('.coin-btn').forEach(btn => btn.classList.remove('active'));
 
             
             // 새로운 선택 활성화
