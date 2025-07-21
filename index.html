@@ -3062,6 +3062,16 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             
             return reversedData;
         }
+
+        // 코인 버튼 클릭 이벤트 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.coin-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const coin = this.getAttribute('data-coin');
+                    selectCoin(coin);
+                });
+            });
+        });
     </script>
 </body>
 </html> 
