@@ -2303,6 +2303,13 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 // 현재 선택된 종목의 버튼 색상을 즉시 동기화
                 updateCurrentCoinButtonColor(analysis);
                 
+                // 강제 버튼 색상 업데이트 (추가 보장)
+                if (analysis.signal && analysis.confidence) {
+                    setTimeout(() => {
+                        forceUpdateButtonColor(selectedCoin, analysis);
+                    }, 100);
+                }
+                
                 // 최신 데이터를 GPT 분석용으로 저장
                 latestAnalysisData = {
                     closes: closes,
