@@ -606,23 +606,196 @@
             visibility: visible;
         }
         
-        /* 모바일에서 툴팁 위치 조정 */
+        /* 모바일 반응형 디자인 */
         @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.6em !important;
+                margin-bottom: 15px;
+            }
+            
+            .api-key-btn {
+                font-size: 0.75em;
+                padding: 6px 12px;
+            }
+            
+            .toggle-container {
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .coin-selector {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                padding: 10px;
+            }
+            
+            .coin-btn {
+                padding: 12px 16px;
+                font-size: 0.85em;
+                min-width: 85px;
+                border-radius: 20px;
+                margin: 3px;
+            }
+            
+            .timeframe-selector {
+                justify-content: center;
+            }
+            
+            .timeframe-btn {
+                padding: 8px 15px;
+                font-size: 0.8em;
+                min-width: 60px;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .chart-container {
+                height: 350px;
+                margin-bottom: 20px;
+            }
+            
+            .info-panel {
+                order: -1;
+            }
+            
+            .info-card {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .current-price {
+                font-size: 1.8em;
+            }
+            
+            .indicators {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .indicator {
+                padding: 12px;
+            }
+            
+            .indicator-value {
+                font-size: 1.1em;
+            }
+            
+            .indicator-label {
+                font-size: 0.75em;
+            }
+            
+            .signal-display {
+                padding: 20px;
+                font-size: 1.1em;
+            }
+            
+            .gpt-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .gpt-guidance,
+            .gpt-analysis {
+                flex: 1;
+            }
+            
+            .guidance-input {
+                height: 150px;
+                font-size: 0.9em;
+            }
+            
+            .gpt-content {
+                font-size: 0.9em;
+                line-height: 1.5;
+                min-height: 150px;
+            }
+            
+            .analyze-btn {
+                padding: 12px 20px;
+                font-size: 0.9em;
+            }
+            
             .tooltip::after {
-                min-width: 240px;
-                max-width: 280px;
+                min-width: 250px;
+                max-width: 300px;
                 font-size: 0.8em;
                 padding: 10px 12px;
             }
+            
+            .status {
+                font-size: 0.85em;
+                padding: 10px;
+            }
         }
         
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
+        /* 작은 모바일 화면 (480px 이하) */
+        @media (max-width: 480px) {
+            .coin-selector {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .coin-btn {
+                width: 90%;
+                max-width: 200px;
+                text-align: center;
             }
             
             .indicators {
                 grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .header h1 {
+                font-size: 1.4em !important;
+            }
+            
+            .current-price {
+                font-size: 1.6em;
+            }
+        }
+        
+        /* 매우 작은 화면 (360px 이하) */
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 1.2em !important;
+                line-height: 1.3;
+            }
+            
+            .coin-btn {
+                width: 95%;
+                padding: 14px 18px;
+                font-size: 0.9em;
+            }
+            
+            .chart-container {
+                height: 280px;
+            }
+            
+            .current-price {
+                font-size: 1.5em;
+            }
+            
+            .info-card {
+                padding: 12px;
             }
         }
     </style>
@@ -1897,14 +2070,19 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     const interval = selectedTimeframe === '5m' ? '5m' : 
                                    selectedTimeframe === '1h' ? '1h' : '1d';
                     
-                    // CORS 문제 해결을 위해 프록시 사용
-                    const apiUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${currentCoin.symbol}?period1=${period1}&period2=${period2}&interval=${interval}`;
+                    // 무료 실시간 주식 API 사용 (CORS 우회)
+                    const proxyUrl = 'https://api.allorigins.win/get?url=';
+                    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${currentCoin.symbol}?period1=${period1}&period2=${period2}&interval=${interval}`;
+                    const apiUrl = proxyUrl + encodeURIComponent(yahooUrl);
                     
                     try {
+                        console.log(`📡 미국 주식 ${currentCoin.symbol} 실시간 데이터 요청 중...`);
                         const response = await fetch(apiUrl);
-                        if (!response.ok) throw new Error('Yahoo Finance API 호출 실패');
                         
-                        const stockData = await response.json();
+                        if (!response.ok) throw new Error('프록시 API 호출 실패');
+                        
+                        const proxyData = await response.json();
+                        const stockData = JSON.parse(proxyData.contents);
                         
                         if (!stockData.chart || !stockData.chart.result || !stockData.chart.result[0]) {
                             throw new Error('주식 데이터를 찾을 수 없습니다.');
@@ -1923,30 +2101,46 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                             candle_acc_trade_volume: quote.volume[index] || 0
                         })).filter(item => item.trade_price > 0);
                         
+                        console.log(`✅ ${currentCoin.symbol} 실시간 데이터 수신 완료:`, reversedData.length, '개 캔들');
+                        console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
+                        
                     } catch (error) {
-                        // Yahoo Finance API 실패시 모의 데이터 사용
-                        console.warn('Yahoo Finance API 실패, 모의 데이터 사용:', error);
-                        const basePrices = {
-                            'SAMSUNG': 70000,  // 삼성전자
-                            'TSLA': 250,    // 테슬라
-                            'GOOGL': 150,   // 구글
-                            'NVDA': 500,    // 엔비디아
-                            'SMR': 12,      // 뉴스케일파워
-                            'NBVAF': 15,    // 네비우스그룹
-                            'MU': 100       // 마이크론
+                        // 프록시 실패시 최신 실제 가격 기반 모의 데이터 사용
+                        console.warn('실시간 데이터 API 실패, 최신 시세 기반 모의 데이터 사용:', error);
+                        
+                        // 2024년 12월 실제 주가 기준 업데이트된 가격
+                        const latestBasePrices = {
+                            'SAMSUNG': 55000,  // 삼성전자 (원화)
+                            'TSLA': 460,       // 테슬라 ($460 근처)
+                            'GOOGL': 175,      // 구글 ($175 근처)
+                            'NVDA': 140,       // 엔비디아 ($140 근처)
+                            'SMR': 11,         // 뉴스케일파워 ($11 근처)
+                            'NBVAF': 3.5,      // 네비우스그룹 ($3.5 근처)
+                            'MU': 115          // 마이크론 ($115 근처) - 실제 가격 반영
                         };
-                        const basePrice = basePrices[currentCoin.symbol] || 150;
-                        reversedData = Array.from({length: 100}, (_, i) => {
-                            const price = basePrice + Math.sin(i * 0.1) * 20 + Math.random() * 10;
+                        const basePrice = latestBasePrices[currentCoin.symbol] || 150;
+                        
+                        // 실제 가격 움직임과 유사한 패턴 생성
+                        reversedData = Array.from({length: 200}, (_, i) => {
+                            // 현실적인 가격 변동 패턴 (실제 주식처럼)
+                            const trend = Math.sin(i * 0.02) * 0.1; // 장기 트렌드
+                            const noise = (Math.random() - 0.5) * 0.03; // 노이즈
+                            const volatility = Math.sin(i * 0.1) * 0.02; // 변동성
+                            
+                            const priceMultiplier = 1 + trend + noise + volatility;
+                            const price = basePrice * priceMultiplier;
+                            
                             return {
-                                candle_date_time_kst: new Date(Date.now() - (100 - i) * 24 * 60 * 60 * 1000).toISOString(),
-                                trade_price: price,
-                                high_price: price * 1.02,
-                                low_price: price * 0.98,
-                                opening_price: price * 0.995,
-                                candle_acc_trade_volume: Math.floor(Math.random() * 1000000)
+                                candle_date_time_kst: new Date(Date.now() - (200 - i) * 24 * 60 * 60 * 1000).toISOString(),
+                                trade_price: Math.max(price * 0.5, price), // 최소값 보장
+                                high_price: price * (1 + Math.random() * 0.02),
+                                low_price: price * (1 - Math.random() * 0.02),
+                                opening_price: price * (0.995 + Math.random() * 0.01),
+                                candle_acc_trade_volume: Math.floor(Math.random() * 2000000 + 500000)
                             };
                         });
+                        
+                        console.log(`📊 ${currentCoin.symbol} 모의 데이터 생성 완료 (기준가: $${basePrice})`);
                     }
                 }
                 
