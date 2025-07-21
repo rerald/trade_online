@@ -1302,11 +1302,28 @@
             }
         };
         
-        // GPT 분석을 위한 최신 데이터 저장
+        // GPT 분석을 위한 최신 데이터 저장 (모든 지표 포함)
         let latestAnalysisData = {
             closes: [],
+            highs: [],
+            lows: [],
             rsi: [],
-            ma20: []
+            macd: { macd: [], signal: [], histogram: [] },
+            ma5: [],
+            ma20: [],
+            ma60: [],
+            bb: { upper: [], middle: [], lower: [] },
+            atr: [],
+            volumes: [],
+            divergenceRate: [],
+            divergence: null,
+            currentPrice: 0,
+            currentRSI: 0,
+            currentMACD: 0,
+            currentATR: 0,
+            currentDivergenceRate: 0,
+            maStatus: '',
+            bbPosition: ''
         };
         
         // 시간 프레임 선택 함수
@@ -1348,8 +1365,25 @@
             // 최신 데이터 초기화
             latestAnalysisData = {
                 closes: [],
+                highs: [],
+                lows: [],
                 rsi: [],
-                ma20: []
+                macd: { macd: [], signal: [], histogram: [] },
+                ma5: [],
+                ma20: [],
+                ma60: [],
+                bb: { upper: [], middle: [], lower: [] },
+                atr: [],
+                volumes: [],
+                divergenceRate: [],
+                divergence: null,
+                currentPrice: 0,
+                currentRSI: 0,
+                currentMACD: 0,
+                currentATR: 0,
+                currentDivergenceRate: 0,
+                maStatus: '',
+                bbPosition: ''
             };
             
             // 상태 메시지 업데이트
@@ -1421,8 +1455,25 @@
             // 최신 데이터 초기화
             latestAnalysisData = {
                 closes: [],
+                highs: [],
+                lows: [],
                 rsi: [],
-                ma20: []
+                macd: { macd: [], signal: [], histogram: [] },
+                ma5: [],
+                ma20: [],
+                ma60: [],
+                bb: { upper: [], middle: [], lower: [] },
+                atr: [],
+                volumes: [],
+                divergenceRate: [],
+                divergence: null,
+                currentPrice: 0,
+                currentRSI: 0,
+                currentMACD: 0,
+                currentATR: 0,
+                currentDivergenceRate: 0,
+                maStatus: '',
+                bbPosition: ''
             };
             
             // 상태 메시지 업데이트
@@ -1876,8 +1927,8 @@
             };
         }
         
-        // 고급 GPT API 호출
-        async function getGPTSignal(closes, rsi, ma20) {
+        // 고급 GPT API 호출 (전체 지표 데이터 포함)
+        async function getGPTSignal(analysisData) {
             // 프록시 서버 사용 시 API 키 불필요
             if (!USE_PROXY_SERVER && !OPENAI_API_KEY) {
                 return `🔑 <strong>API 키가 설정되지 않았습니다!</strong><br><br>
@@ -1890,9 +1941,16 @@
             }
             
             try {
+                const { closes, highs, lows, rsi, macd, ma5, ma20, ma60, bb, atr, volumes, divergenceRate, 
+                        currentPrice, currentRSI, currentMACD, currentATR, currentDivergenceRate, maStatus, bbPosition } = analysisData;
+                
                 const recentPrices = closes.slice(-15);
                 const recentRSI = rsi.slice(-8);
-                const recentMA = ma20.slice(-8);
+                const recentMA20 = ma20.slice(-8);
+                const recentMA5 = ma5.slice(-8);
+                const recentMA60 = ma60.slice(-8);
+                const recentMACD = macd.macd.slice(-8);
+                const recentVolumes = volumes.slice(-8);
                 
                 // 추가 분석 정보
                 const priceChange = ((closes[closes.length-1] - closes[closes.length-2]) / closes[closes.length-2] * 100).toFixed(2);
@@ -1929,23 +1987,41 @@
                 // 답변 형식 설정 (통화별)
                 const priceFormat = currentCoin.currency === 'USD' ? '$XXX.XX' : 'X.XX억원';
 
-                const prompt = `${currentCoin.name}(${currentCoin.symbol}) ${frameInfo.name} 기술적 분석:
+                const prompt = `${currentCoin.name}(${currentCoin.symbol}) ${frameInfo.name} 완전 기술적 분석:
 
-📊 시장 데이터:
-현재가격: ${formatPrice(closes[closes.length-1])}
-최근 15개 가격 트렌드: ${recentPrices.map(p => formatPrice(p)).join(' → ')}
-최근 8개 RSI: ${recentRSI.map(r => r?.toFixed(1)).join(' → ')}
-이평선(20일): ${formatPrice(recentMA[recentMA.length-1])}
+💰 현재 시장 상황:
+현재가격: ${formatPrice(currentPrice)}
 전일 대비: ${priceChange}%
-이평선 괴리: ${maDistance}%
+거래량 증감: ${recentVolumes.length > 1 ? ((recentVolumes[recentVolumes.length-1] / recentVolumes[recentVolumes.length-2] - 1) * 100).toFixed(1) + '%' : 'N/A'}
 
-📈 추가 분석 정보:
-최고가 (15일 내): ${formatPrice(Math.max(...recentPrices))}
-최저가 (15일 내): ${formatPrice(Math.min(...recentPrices))}
-고점 대비 하락률: ${(((Math.max(...recentPrices) - closes[closes.length-1]) / Math.max(...recentPrices)) * 100).toFixed(1)}%
+📊 기본 지표:
+RSI (14): ${currentRSI?.toFixed(1)} (${currentRSI < 30 ? '과매도' : currentRSI > 70 ? '과매수' : '중립'})
+MACD: ${currentMACD?.toFixed(0)} (${currentMACD > 0 ? '상승 모멘텀' : '하락 모멘텀'})
+ATR 변동성: ${currentATR?.toFixed(0)}
+
+📈 이동평균 분석:
+MA5: ${formatPrice(ma5[ma5.length-1])}
+MA20: ${formatPrice(ma20[ma20.length-1])} (괴리율: ${maDistance}%)
+MA60: ${formatPrice(ma60[ma60.length-1])}
+이평선 배열: ${maStatus}
+
+🎯 볼린저 밴드:
+현재 위치: ${bbPosition}
+상단: ${formatPrice(bb.upper[bb.upper.length-1])}
+중간: ${formatPrice(bb.middle[bb.middle.length-1])}
+하단: ${formatPrice(bb.lower[bb.lower.length-1])}
+
+📈 최근 15일 가격 트렌드:
+가격 흐름: ${recentPrices.map(p => formatPrice(p)).join(' → ')}
+최고가: ${formatPrice(Math.max(...recentPrices))}
+최저가: ${formatPrice(Math.min(...recentPrices))}
+고점 대비 하락률: ${(((Math.max(...recentPrices) - currentPrice) / Math.max(...recentPrices)) * 100).toFixed(1)}%
 가격 변동성: ${((Math.max(...recentPrices) - Math.min(...recentPrices)) / Math.min(...recentPrices) * 100).toFixed(1)}%
-RSI 추세: ${recentRSI[recentRSI.length-1] > recentRSI[0] ? '상승' : '하락'}
-이동평균 방향: ${recentMA[recentMA.length-1] > recentMA[0] ? '상승' : '하락'}${guidanceSection}
+
+📊 추세 방향성:
+RSI 추세 (8일): ${recentRSI.map(r => r?.toFixed(1)).join(' → ')} (${recentRSI[recentRSI.length-1] > recentRSI[0] ? '상승' : '하락'})
+MA20 추세: ${recentMA20[recentMA20.length-1] > recentMA20[0] ? '상승' : '하락'}
+MACD 추세: ${recentMACD.map(m => m?.toFixed(0)).join(' → ')}${guidanceSection}
 
 위 데이터와 지침을 바탕으로 다음 형식으로 답변:
 
@@ -2322,8 +2398,25 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 // 최신 데이터를 GPT 분석용으로 저장
                 latestAnalysisData = {
                     closes: closes,
+                    highs: highs,
+                    lows: lows,
                     rsi: rsi,
-                    ma20: ma20
+                    macd: macd,
+                    ma5: ma5,
+                    ma20: ma20,
+                    ma60: ma60,
+                    bb: bb,
+                    volumes: volumes,
+                    atr: atr,
+                    divergenceRate: divergenceRate,
+                    divergence: divergence,
+                    currentPrice: currentPrice,
+                    currentRSI: currentRSI,
+                    currentMACD: currentMACD,
+                    currentATR: currentATR,
+                    currentDivergenceRate: currentDivergenceRate,
+                    maStatus: maStatus,
+                    bbPosition: bbPosition
                 };
                 
                 const currentTf = timeframeInfo[selectedTimeframe];
@@ -2355,12 +2448,8 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 // GPT 분석 시작 메시지
                 gptSignalDiv.innerHTML = '🤖 <strong>AI가 고급 분석 중입니다...</strong><br><br><span class="loading"></span> GPT-3.5가 최신 데이터를 분석하고 있습니다...<br>📊 15개 가격 데이터 + 8개 기술 지표 종합 분석 중';
                 
-                // GPT API 호출
-                const gptAnalysis = await getGPTSignal(
-                    latestAnalysisData.closes, 
-                    latestAnalysisData.rsi, 
-                    latestAnalysisData.ma20
-                );
+                // GPT API 호출 (전체 분석 데이터 전달)
+                const gptAnalysis = await getGPTSignal(latestAnalysisData);
                 
                 // 결과 표시
                 gptSignalDiv.innerHTML = gptAnalysis.replace(/\n/g, '<br>');
