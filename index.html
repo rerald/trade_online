@@ -2090,12 +2090,12 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                             candle_acc_trade_volume: quote.volume[index] || 0
                         })).filter(item => item.trade_price > 0);
                         
-                            console.log(`✅ ${currentCoin.symbol} Yahoo Finance 데이터 수신 완료:`, reversedData.length, '개 캔들');
-                            console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
-                            
-                        } catch (error) {
-                            // 모든 API 실패시 최신 실제 가격 기반 모의 데이터 사용
-                            console.warn('모든 실시간 데이터 API 실패, 최신 시세 기반 모의 데이터 사용:', error);
+                        console.log(`✅ ${currentCoin.symbol} Yahoo Finance 데이터 수신 완료:`, reversedData.length, '개 캔들');
+                        console.log(`💰 현재가: $${reversedData[reversedData.length-1]?.trade_price?.toFixed(2)}`);
+                        
+                    } catch (error) {
+                        // 모든 API 실패시 최신 실제 가격 기반 모의 데이터 사용
+                        console.warn('모든 실시간 데이터 API 실패, 최신 시세 기반 모의 데이터 사용:', error);
                         
                         // 2024년 12월 실제 주가 기준 업데이트된 가격
                         const latestBasePrices = {
@@ -2129,8 +2129,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                             };
                         });
                         
-                                                    console.log(`📊 ${currentCoin.symbol} 모의 데이터 생성 완료 (기준가: $${basePrice})`);
-                        }
+                        console.log(`📊 ${currentCoin.symbol} 모의 데이터 생성 완료 (기준가: $${basePrice})`);
                     }
                 }
                 
