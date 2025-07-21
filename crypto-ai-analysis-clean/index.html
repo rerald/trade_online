@@ -822,34 +822,16 @@
 • 각각의 기술적 지표
 • 맞춤형 AI 분석
 • 실시간 데이터 업데이트">
-                <button class="coin-btn active" id="btcBtn" onclick="selectCoin('BTC')">
-                    <span class="coin-icon">🟠</span>비트코인
-                </button>
-                <button class="coin-btn" id="ethBtn" onclick="selectCoin('ETH')">
-                    <span class="coin-icon">🔷</span>이더리움
-                </button>
-                <button class="coin-btn" id="samsungBtn" onclick="selectCoin('SAMSUNG')">
-                    <span class="coin-icon">📱</span>삼성전자
-                </button>
-                <button class="coin-btn" id="tslaBtn" onclick="selectCoin('TSLA')">
-                    <span class="coin-icon">🚗</span>테슬라
-                </button>
-                <button class="coin-btn" id="googlBtn" onclick="selectCoin('GOOGL')">
-                    <span class="coin-icon">🔍</span>구글
-                </button>
-                <button class="coin-btn" id="nvdaBtn" onclick="selectCoin('NVDA')">
-                    <span class="coin-icon">🖥️</span>엔비디아
-                </button>
-                <button class="coin-btn" id="smrBtn" onclick="selectCoin('SMR')">
-                    <span class="coin-icon">⚡</span>뉴스케일파워
-                </button>
-                <button class="coin-btn" id="nbvafBtn" onclick="selectCoin('NBVAF')">
-                    <span class="coin-icon">🏢</span>네비우스그룹
-                </button>
-                <button class="coin-btn" id="muBtn" onclick="selectCoin('MU')">
-                    <span class="coin-icon">💾</span>마이크론
-                </button>
-            </div>
+                <div class="coin-selector">
+                    <button class="coin-btn active" data-coin="BTC">
+                        <span class="coin-icon">🟠</span>
+                        <span class="coin-name">비트코인</span>
+                    </button>
+                    <button class="coin-btn" data-coin="ETH">
+                        <span class="coin-icon">🔷</span>
+                        <span class="coin-name">이더리움</span>
+                    </button>
+                </div>
             
             <!-- 시간 프레임 선택 -->
             <div class="timeframe-selector tooltip" data-tooltip="⏰ 차트 시간 프레임 선택
