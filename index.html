@@ -173,6 +173,8 @@
             line-height: 1.4;
             resize: vertical;
             font-family: inherit;
+            overflow-y: auto;
+            overscroll-behavior: contain;
         }
         
         .guidance-input::placeholder {
@@ -192,32 +194,45 @@
         }
         
         .gpt-content {
-            max-height: 300px;
-            min-height: 120px;
+            height: 300px;
             overflow-y: auto;
+            overflow-x: hidden;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             padding: 15px;
             line-height: 1.6;
             flex: 1;
+            /* 스크롤 영역 독립성 보장 */
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
         }
         
         .gpt-content::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
         
         .gpt-content::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            margin: 2px;
         }
         
         .gpt-content::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 5px;
+            border: 2px solid transparent;
+            background-clip: content-box;
         }
         
         .gpt-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.7);
+            background-clip: content-box;
+        }
+        
+        .gpt-content::-webkit-scrollbar-thumb:active {
+            background: rgba(255, 255, 255, 0.8);
+            background-clip: content-box;
         }
         
         .analyze-btn {
@@ -510,7 +525,8 @@
             }
             
             .gpt-content {
-                max-height: 250px;
+                height: 250px;
+                overscroll-behavior: contain;
             }
         }
         
@@ -729,7 +745,8 @@
             .gpt-content {
                 font-size: 0.9em;
                 line-height: 1.5;
-                min-height: 150px;
+                height: 200px;
+                overscroll-behavior: contain;
             }
             
             .analyze-btn {
