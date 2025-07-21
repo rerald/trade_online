@@ -1322,8 +1322,7 @@
 
             
             // 새로운 선택 활성화
-            const btnId = coin.toLowerCase() + 'Btn';
-            document.getElementById(btnId).classList.add('active');
+            document.querySelector(`[data-coin="${coin}"]`).classList.add('active');
             
             // 선택된 코인 업데이트
             selectedCoin = coin;
