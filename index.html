@@ -811,12 +811,7 @@
 • 🟠 비트코인 (BTC/KRW)
 • 🔷 이더리움 (ETH/KRW)
 • 📱 삼성전자 (005930/KRW)
-• 🚗 테슬라 (TSLA/USD)
-• 🔍 구글 (GOOGL/USD)
-• 🖥️ 엔비디아 (NVDA/USD)
-• ⚡ 뉴스케일파워 (SMR/USD)
-• 🏢 네비우스그룹 (NBVAF/USD)
-• 💾 마이크론 (MU/USD)
+
 
 📊 종목별 독립적 분석:
 • 각각의 기술적 지표
@@ -828,24 +823,7 @@
                 <button class="coin-btn" id="ethBtn" onclick="selectCoin('ETH')">
                     <span class="coin-icon">🔷</span>이더리움
                 </button>
-                <button class="coin-btn" id="tslaBtn" onclick="selectCoin('TSLA')">
-                    <span class="coin-icon">🚗</span>테슬라
-                </button>
-                <button class="coin-btn" id="googlBtn" onclick="selectCoin('GOOGL')">
-                    <span class="coin-icon">🔍</span>구글
-                </button>
-                <button class="coin-btn" id="nvdaBtn" onclick="selectCoin('NVDA')">
-                    <span class="coin-icon">🖥️</span>엔비디아
-                </button>
-                <button class="coin-btn" id="smrBtn" onclick="selectCoin('SMR')">
-                    <span class="coin-icon">⚡</span>뉴스케일파워
-                </button>
-                <button class="coin-btn" id="nbvafBtn" onclick="selectCoin('NBVAF')">
-                    <span class="coin-icon">🏢</span>네비우스그룹
-                </button>
-                <button class="coin-btn" id="muBtn" onclick="selectCoin('MU')">
-                    <span class="coin-icon">💾</span>마이크론
-                </button>
+
             </div>
             
             <!-- 시간 프레임 선택 -->
@@ -1231,60 +1209,7 @@
                 type: 'crypto',
                 currency: 'KRW'
             },
-            'TSLA': {
-                name: '테슬라',
-                symbol: 'TSLA',
-                market: 'TSLA',
-                icon: '🚗',
-                color: '#e31837',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'GOOGL': {
-                name: '구글',
-                symbol: 'GOOGL',
-                market: 'GOOGL',
-                icon: '🔍',
-                color: '#4285f4',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'NVDA': {
-                name: '엔비디아',
-                symbol: 'NVDA',
-                market: 'NVDA',
-                icon: '🖥️',
-                color: '#76b900',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'SMR': {
-                name: '뉴스케일파워',
-                symbol: 'SMR',
-                market: 'SMR',
-                icon: '⚡',
-                color: '#ff6b35',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'NBVAF': {
-                name: '네비우스그룹',
-                symbol: 'NBVAF',
-                market: 'NBVAF',
-                icon: '🏢',
-                color: '#0066cc',
-                type: 'stock',
-                currency: 'USD'
-            },
-            'MU': {
-                name: '마이크론',
-                symbol: 'MU',
-                market: 'MU',
-                icon: '💾',
-                color: '#9b59b6',
-                type: 'stock',
-                currency: 'USD'
-            }
+
         };
         
         // 시간 프레임별 정보
@@ -1377,12 +1302,7 @@
             // 이전 선택 해제
             document.getElementById('btcBtn').classList.remove('active');
             document.getElementById('ethBtn').classList.remove('active');
-            document.getElementById('tslaBtn').classList.remove('active');
-            document.getElementById('googlBtn').classList.remove('active');
-            document.getElementById('nvdaBtn').classList.remove('active');
-            document.getElementById('smrBtn').classList.remove('active');
-            document.getElementById('nbvafBtn').classList.remove('active');
-            document.getElementById('muBtn').classList.remove('active');
+
             
             // 새로운 선택 활성화
             const btnId = coin.toLowerCase() + 'Btn';
@@ -1926,12 +1846,12 @@
                         return `$${price.toFixed(2)}`;
                     } else {
                         // 암호화폐: 원화 단위 (억/만 변환)
-                        if (price >= 100000000) { // 1억 이상
-                            return `${(price/100000000).toFixed(2)}억원`;
-                        } else if (price >= 10000) { // 1만 이상
-                            return `${(price/10000).toFixed(0)}만원`;
-                        } else {
-                            return `${price}원`;
+                    if (price >= 100000000) { // 1억 이상
+                        return `${(price/100000000).toFixed(2)}억원`;
+                    } else if (price >= 10000) { // 1만 이상
+                        return `${(price/10000).toFixed(0)}만원`;
+                    } else {
+                        return `${price}원`;
                         }
                     }
                 };
@@ -1947,7 +1867,7 @@
 
                 // 답변 형식 설정 (통화별)
                 const priceFormat = currentCoin.currency === 'USD' ? '$XXX.XX' : 'X.XX억원';
-                
+
                 const prompt = `${currentCoin.name}(${currentCoin.symbol}) ${frameInfo.name} 기술적 분석:
 
 📊 시장 데이터:
@@ -2045,9 +1965,9 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 
                 if (currentCoin.type === 'crypto') {
                     // 암호화폐: 업비트 API 사용
-                    const response = await fetch(`https://api.upbit.com/v1/candles/${timeframeConfig.apiPath}?market=${currentCoin.market}&count=200`);
-                    if (!response.ok) throw new Error('업비트 API 호출 실패');
-                    
+                const response = await fetch(`https://api.upbit.com/v1/candles/${timeframeConfig.apiPath}?market=${currentCoin.market}&count=200`);
+                if (!response.ok) throw new Error('업비트 API 호출 실패');
+                
                     candleData = await response.json();
                     reversedData = candleData.reverse(); // 시간순 정렬
                 } else if (currentCoin.type === 'stock') {
@@ -2429,8 +2349,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 } else {
                                          // 주식: 2024년 12월 실제 시세 기반 모의 데이터
                      const basePrices = {
-                         'SAMSUNG': 55000, 'TSLA': 460, 'GOOGL': 175, 'NVDA': 140,
-                         'SMR': 11, 'NBVAF': 3.5, 'MU': 115
+                                         'XRP': 3000, 'DOGE': 500, 'SOL': 200000, 'TRUMP': 50000
                      };
                     const basePrice = basePrices[symbol] || 150;
                     
