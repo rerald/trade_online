@@ -3124,35 +3124,42 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             return 'signal-hold';
         }
 
-        // 모든 코인 버튼 색상 업데이트
-        function updateAllCoinButtonColors() {
-            Object.keys(allCoinSignals).forEach(coin => {
-                const btnElement = document.querySelector(`[data-coin="${coin}"]`);
-                if (btnElement) {
-                    const signalData = allCoinSignals[coin];
-                    
-                    // 기존 신호 클래스 제거
-                    btnElement.classList.remove(
-                        'signal-strong-buy', 'signal-buy', 'signal-weak-buy',
-                        'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell'
-                    );
-                    
-                    // 새로운 신호 클래스 추가
-                    const signalClass = getSignalClass(signalData.signal, signalData.confidence);
-                    btnElement.classList.add(signalClass);
-                    
-                    // 툴팁에 신호 정보 추가
-                    const signalText = signalData.signal === 'BUY' ? '매수' : 
-                                     signalData.signal === 'SELL' ? '매도' : '보유';
-                    const confidenceText = `${signalData.confidence}%`;
-                    const timeText = signalData.lastUpdate ? 
-                        new Date(signalData.lastUpdate).toLocaleTimeString('ko-KR') : '분석 대기';
-                    
-                    btnElement.setAttribute('title', 
-                        `${coinInfo[coin].name}\n신호: ${signalText} (${confidenceText})\n업데이트: ${timeText}`);
-                }
-            });
-        }
+                 // 단일 코인 버튼 색상 업데이트
+         function updateSingleCoinButtonColor(coin) {
+             const btnElement = document.querySelector(`[data-coin="${coin}"]`);
+             if (btnElement && allCoinSignals[coin]) {
+                 const signalData = allCoinSignals[coin];
+                 
+                 // 기존 신호 클래스 제거
+                 btnElement.classList.remove(
+                     'signal-strong-buy', 'signal-buy', 'signal-weak-buy',
+                     'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell'
+                 );
+                 
+                 // 새로운 신호 클래스 추가
+                 const signalClass = getSignalClass(signalData.signal, signalData.confidence);
+                 btnElement.classList.add(signalClass);
+                 
+                 // 툴팁에 신호 정보 추가
+                 const signalText = signalData.signal === 'BUY' ? '매수' : 
+                                  signalData.signal === 'SELL' ? '매도' : '보유';
+                 const confidenceText = `${signalData.confidence}%`;
+                 const timeText = signalData.lastUpdate ? 
+                     new Date(signalData.lastUpdate).toLocaleTimeString('ko-KR') : '분석 대기';
+                 
+                 btnElement.setAttribute('title', 
+                     `${coinInfo[coin].name}\n신호: ${signalText} (${confidenceText})\n업데이트: ${timeText}`);
+                     
+                 console.log(`${coin} 버튼 색상 업데이트: ${signalClass} (${signalText} ${confidenceText})`);
+             }
+         }
+
+         // 모든 코인 버튼 색상 업데이트
+         function updateAllCoinButtonColors() {
+             Object.keys(allCoinSignals).forEach(coin => {
+                 updateSingleCoinButtonColor(coin);
+             });
+         }
 
         // 단일 코인의 신호 분석 수행
         async function analyzeCoinSignal(coin, data) {
