@@ -6,6 +6,8 @@
     <title>업비트 ETH 실시간 신호 분석</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -194,7 +196,7 @@
         }
         
         .gpt-content {
-            height: 300px;
+            height: 450px;
             overflow-y: auto;
             overflow-x: hidden;
             background: rgba(255, 255, 255, 0.1);
@@ -259,6 +261,61 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+        
+        /* 추천 지침 버튼들 스타일 */
+        .guidance-buttons {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .guidance-category {
+            margin-bottom: 12px;
+        }
+        
+        .guidance-category:last-child {
+            margin-bottom: 0;
+        }
+        
+        .category-label {
+            display: block;
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .guidance-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        
+        .guidance-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        .guidance-btn:active {
+            transform: translateY(0);
+            background: rgba(255, 255, 255, 0.3);
         }
         
         /* API 키 설정 모달 */
@@ -419,6 +476,39 @@
             color: #667eea;
         }
         
+        /* 차트 기간 선택 */
+        .period-selector {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+        }
+        
+        .period-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.75em;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: #666;
+            min-width: 50px;
+        }
+        
+        .period-btn.active {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            box-shadow: 0 2px 10px rgba(34, 197, 94, 0.3);
+        }
+        
+        .period-btn:hover:not(.active) {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+        
         .coin-btn {
             padding: 10px 20px;
             border: none;
@@ -525,7 +615,7 @@
             }
             
             .gpt-content {
-                height: 250px;
+                height: 350px;
                 overscroll-behavior: contain;
             }
         }
@@ -682,6 +772,23 @@
                 min-width: 60px;
             }
             
+            .period-btn {
+                padding: 5px 8px;
+                font-size: 0.65em;
+                min-width: 40px;
+            }
+            
+            .period-selector {
+                justify-content: center;
+                margin-top: 10px;
+            }
+            
+            .period-btn {
+                padding: 6px 10px;
+                font-size: 0.7em;
+                min-width: 45px;
+            }
+            
             .main-content {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -745,13 +852,45 @@
             .gpt-content {
                 font-size: 0.9em;
                 line-height: 1.5;
-                height: 200px;
+                height: 300px;
                 overscroll-behavior: contain;
             }
             
+            /* 모바일에서 추천 지침 버튼 조정 */
+            .guidance-buttons {
+                padding: 10px;
+                margin-top: 10px;
+            }
+            
+            .guidance-category {
+                margin-bottom: 10px;
+            }
+            
+            .category-label {
+                font-size: 0.8em;
+                margin-bottom: 5px;
+            }
+            
+            .button-group {
+                gap: 4px;
+            }
+            
+            .guidance-btn {
+                padding: 5px 10px;
+                font-size: 0.75em;
+                border-radius: 12px;
+            }
+            
             .analyze-btn {
-                padding: 12px 20px;
-                font-size: 0.9em;
+                padding: 10px 16px;
+                font-size: 0.85em;
+                flex: 1;
+                min-width: 80px;
+            }
+            
+            .gpt-section h3 > div {
+                flex-wrap: wrap;
+                gap: 8px;
             }
             
             .tooltip::after {
@@ -837,6 +976,36 @@
             .info-card {
                 padding: 12px;
             }
+            
+            /* 매우 작은 화면에서 추천 지침 버튼 조정 */
+            .guidance-buttons {
+                padding: 8px;
+            }
+            
+            .guidance-category {
+                margin-bottom: 8px;
+            }
+            
+            .category-label {
+                font-size: 0.75em;
+            }
+            
+            .guidance-btn {
+                padding: 4px 8px;
+                font-size: 0.7em;
+                border-radius: 10px;
+            }
+            
+            .analyze-btn {
+                padding: 8px 12px;
+                font-size: 0.8em;
+                min-width: 70px;
+            }
+            
+            .gpt-section h3 > div {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
@@ -904,6 +1073,28 @@
                 <button class="timeframe-btn" id="btn1h" onclick="selectTimeframe('1h')">1시간</button>
                 <button class="timeframe-btn active" id="btn1d" onclick="selectTimeframe('1d')">일봉</button>
                 <button class="timeframe-btn" id="btn1w" onclick="selectTimeframe('1w')">주봉</button>
+            </div>
+            
+            <!-- 차트 기간 선택 -->
+            <div class="period-selector tooltip" data-tooltip="📅 차트 표시 기간 선택
+
+📊 일봉 기준 실제 기간:
+• 100개: 약 3개월 (단기 분석)
+• 200개: 약 7개월 (기본 분석) 
+• 500개: 약 1.5년 (중기 분석)
+• 1000개: 약 3년 (장기 분석)
+• 2000개: 약 6년 (초장기 분석)
+
+📈 주봉 기준: 위 기간의 약 7배
+⏰ 시간봉/분봉: 위 기간의 1/24 ~ 1/288
+
+💡 장기투자는 1000개 이상 권장
+⚡ 기간이 길수록 로딩 시간 증가">
+                <button class="period-btn" id="period100" onclick="selectPeriod(100)">100</button>
+                <button class="period-btn active" id="period200" onclick="selectPeriod(200)">200</button>
+                <button class="period-btn" id="period500" onclick="selectPeriod(500)">500</button>
+                <button class="period-btn" id="period1000" onclick="selectPeriod(1000)">1000</button>
+                <button class="period-btn" id="period2000" onclick="selectPeriod(2000)">2000</button>
             </div>
         </div>
         
@@ -1114,18 +1305,31 @@
 • 위험 요소 및 주의사항
 
 ⚠️ 투자 권유가 아닌 기술적 분석 의견">
-                <span>🤖 AI 분석 리포트</span>
-                <button class="analyze-btn tooltip" data-tooltip="🔍 AI 분석 실행
+                                    <span>🤖 AI 분석 리포트</span>
+                <div style="display: flex; gap: 10px;">
+                    <button class="analyze-btn tooltip" data-tooltip="🔍 AI 분석 실행
 
-💡 GPT-3.5로 심화 분석 요청
+💡 GPT로 심화 분석 요청
 📊 최신 데이터로 전문 분석
 ⚡ 클릭 시에만 토큰 소비
 📝 왼쪽 지침과 함께 분석
 
 💰 토큰 절약을 위한 수동 분석" onclick="requestGPTAnalysis()" id="analyzeBtn">
-                    <span>🔍</span>
-                    <span>분석</span>
-                </button>
+                        <span>🔍</span>
+                        <span>분석</span>
+                    </button>
+                    <button class="analyze-btn tooltip" data-tooltip="📄 PDF 리포트 다운로드
+
+📊 현재 분석 결과를 PDF로 저장
+📝 투자 보고서 형태로 다운로드
+🎯 종목명, 차트, 분석 내용 포함
+💼 투자 기록 보관용
+
+⚠️ 분석 완료 후 사용 가능" onclick="downloadPDF()" id="pdfBtn" disabled style="opacity: 0.5;">
+                        <span>📄</span>
+                        <span>PDF</span>
+                    </button>
+                </div>
             </h3>
             
             <div class="gpt-container">
@@ -1133,11 +1337,10 @@
                 <div class="gpt-guidance">
                     <h4 class="tooltip" data-tooltip="📝 AI 분석 지침 설정
 
-💡 사용 예시:
-• '보수적인 관점에서 분석해줘'
-• '단기 스윙 트레이딩 관점에서 봐줘'
-• '리스크를 중점적으로 분석해줘'
-• '기관 투자자 관점에서 분석해줘'
+💡 사용 방법:
+• 직접 입력하거나 아래 추천 버튼 클릭
+• 여러 지침을 조합해서 사용 가능
+• 구체적일수록 정확한 분석
 
 🎯 효과:
 • 맞춤형 분석 방향 설정
@@ -1146,29 +1349,60 @@
 
 📝 비워둬도 기본 분석 실행">📝 분석 지침</h4>
                     <textarea class="guidance-input tooltip" id="guidanceInput" 
-                        placeholder="AI에게 전달할 분석 지침을 입력하세요...
-
-예시:
-- 보수적인 관점에서 리스크를 중점적으로 분석해주세요
-- 단기 스윙 트레이딩 관점에서 진입/청산 타이밍을 알려주세요  
-- 기관 투자자 관점에서 중장기 전략을 제시해주세요
-- 과거 패턴 비교를 통한 예상 시나리오를 제시해주세요
-
-💡 구체적인 지침일수록 더 정확한 분석을 받을 수 있습니다."
+                        placeholder="AI에게 전달할 분석 지침을 입력하거나 아래 추천 버튼을 클릭하세요..."
                         data-tooltip="📝 맞춤형 AI 분석 지침
 
-🎯 입력 가이드:
-• 투자 스타일 (보수적/공격적/중립적)
-• 시간 관점 (단기/중기/장기)
-• 중점 분야 (리스크/수익/타이밍)
-• 특별 요청 (패턴 분석, 시나리오 등)
+🎯 입력 방법:
+• 직접 텍스트 입력
+• 아래 추천 지침 버튼 클릭
+• 여러 지침 조합 가능
 
-💡 예시 지침:
-'보수적 관점에서 하락 리스크 중점 분석'
-'단기 매매를 위한 진입점과 손절점 제시'
-'과거 비슷한 패턴과 비교 분석'
+💡 팁:
+• 구체적인 지침일수록 정확한 분석
+• 투자 스타일에 맞는 지침 선택
+• 시간 관점(단기/중기/장기) 명시
 
 📝 비워둬도 기본 분석 수행"></textarea>
+                    
+                    <!-- 추천 지침 버튼들 -->
+                    <div class="guidance-buttons">
+                        <div class="guidance-category">
+                            <span class="category-label">🎯 투자 관점</span>
+                            <div class="button-group">
+                                <button class="guidance-btn" onclick="setGuidance('conservative')">🛡️ 보수적</button>
+                                <button class="guidance-btn" onclick="setGuidance('aggressive')">⚡ 공격적</button>
+                                <button class="guidance-btn" onclick="setGuidance('balanced')">⚖️ 균형적</button>
+                            </div>
+                        </div>
+                        
+                        <div class="guidance-category">
+                            <span class="category-label">⏰ 시간 관점</span>
+                            <div class="button-group">
+                                <button class="guidance-btn" onclick="setGuidance('shortterm')">🔥 단기매매</button>
+                                <button class="guidance-btn" onclick="setGuidance('swingterm')">📈 스윙</button>
+                                <button class="guidance-btn" onclick="setGuidance('longterm')">💎 장기투자</button>
+                            </div>
+                        </div>
+                        
+                        <div class="guidance-category">
+                            <span class="category-label">🔍 분석 초점</span>
+                            <div class="button-group">
+                                <button class="guidance-btn" onclick="setGuidance('technical')">📊 기술적</button>
+                                <button class="guidance-btn" onclick="setGuidance('pattern')">🔄 패턴</button>
+                                <button class="guidance-btn" onclick="setGuidance('volume')">📢 거래량</button>
+                                <button class="guidance-btn" onclick="setGuidance('risk')">⚠️ 리스크</button>
+                            </div>
+                        </div>
+                        
+                        <div class="guidance-category">
+                            <span class="category-label">🎲 특별 분석</span>
+                            <div class="button-group">
+                                <button class="guidance-btn" onclick="setGuidance('scenario')">🎭 시나리오</button>
+                                <button class="guidance-btn" onclick="setGuidance('comparison')">📋 비교분석</button>
+                                <button class="guidance-btn" onclick="setGuidance('clear')" style="background: rgba(255,255,255,0.2);">🗑️ 지우기</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- 오른쪽: AI 분석 결과 영역 -->
@@ -1233,6 +1467,9 @@
         // OpenAI API Key (사용자가 직접 입력)
         let OPENAI_API_KEY = "";
         
+        // 선택된 GPT 모델 (기본값: gpt-4o-mini)
+        let SELECTED_GPT_MODEL = localStorage.getItem('selected_gpt_model') || 'gpt-4o-mini';
+        
         // 프록시 서버 설정 (API 키 없이 사용 가능)
         const USE_PROXY_SERVER = false; // 사용자가 직접 API 키 입력
         
@@ -1251,6 +1488,27 @@
         
         // 현재 선택된 시간 프레임 (기본값: 일봉)
         let selectedTimeframe = '1d';
+        
+        // 현재 선택된 차트 기간 (기본값: 200개)
+        let selectedPeriod = 200;
+        
+        // 통화별 가격 포맷팅 함수 (전역)
+        function formatPrice(price) {
+            const currentCoin = coinInfo[selectedCoin];
+            if (currentCoin.currency === 'USD') {
+                // 미국 주식: 달러 단위
+                return `$${price.toFixed(2)}`;
+            } else {
+                // 암호화폐: 원화 단위 (억/만 변환)
+                if (price >= 100000000) { // 1억 이상
+                    return `${(price/100000000).toFixed(2)}억원`;
+                } else if (price >= 10000) { // 1만 이상
+                    return `${(price/10000).toFixed(0)}만원`;
+                } else {
+                    return `${price}원`;
+                }
+            }
+        }
         
         // 모든 코인의 신호 분석 결과 저장
         let allCoinSignals = {
@@ -1371,6 +1629,55 @@
             maStatus: '',
             bbPosition: ''
         };
+        
+        // 차트 기간 선택 함수
+        function selectPeriod(period) {
+            // 이전 선택 해제
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 새로운 선택 활성화
+            const btnId = 'period' + period;
+            document.getElementById(btnId).classList.add('active');
+            
+            // 선택된 기간 업데이트
+            selectedPeriod = period;
+            
+            // 상태 메시지 업데이트
+            const currentCoin = coinInfo[selectedCoin];
+            const tfInfo = timeframeInfo[selectedTimeframe];
+            const periodDesc = period >= 1000 ? '장기분석' : period >= 500 ? '중기분석' : '단기분석';
+            
+            document.getElementById('status').textContent = `${currentCoin.name} ${tfInfo.name} ${period}개 (${periodDesc}) - 데이터 로딩 중...`;
+            
+            // 최신 데이터 초기화
+            latestAnalysisData = {
+                closes: [],
+                highs: [],
+                lows: [],
+                rsi: [],
+                macd: { macd: [], signal: [], histogram: [] },
+                ma5: [],
+                ma20: [],
+                ma60: [],
+                bb: { upper: [], middle: [], lower: [] },
+                atr: [],
+                volumes: [],
+                divergenceRate: [],
+                divergence: null,
+                currentPrice: 0,
+                currentRSI: 0,
+                currentMACD: 0,
+                currentATR: 0,
+                currentDivergenceRate: 0,
+                maStatus: '',
+                bbPosition: ''
+            };
+            
+            // 새로운 기간으로 차트 업데이트
+            draw();
+        }
         
         // 시간 프레임 선택 함수
         function selectTimeframe(timeframe) {
@@ -1718,6 +2025,11 @@
             return ma;
         }
         
+        // 단순 이동평균 계산 (SMA)
+        function calculateSMA(prices, period = 20) {
+            return calculateMA(prices, period);
+        }
+        
         // MACD 계산
         function calculateMACD(prices, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) {
             if (prices.length < slowPeriod) return { macd: [], signal: [], histogram: [] };
@@ -2004,31 +2316,15 @@
                 
                 const currentCoin = coinInfo[selectedCoin];
                 const frameInfo = timeframeInfo[selectedTimeframe];
-                // 통화별 가격 포맷팅
-                const formatPrice = (price) => {
-                    if (currentCoin.currency === 'USD') {
-                        // 미국 주식: 달러 단위
-                        return `$${price.toFixed(2)}`;
-                    } else {
-                        // 암호화폐: 원화 단위 (억/만 변환)
-                    if (price >= 100000000) { // 1억 이상
-                        return `${(price/100000000).toFixed(2)}억원`;
-                    } else if (price >= 10000) { // 1만 이상
-                        return `${(price/10000).toFixed(0)}만원`;
-                    } else {
-                        return `${price}원`;
-                        }
-                    }
-                };
 
                 // 사용자 지침 가져오기
                 const guidanceInput = document.getElementById('guidanceInput');
                 const userGuidance = guidanceInput ? guidanceInput.value.trim() : '';
                 
-                // 지침이 있으면 포함, 없으면 기본 분석
+                // 지침이 있으면 포함, 없으면 기본 분석 (GPT에게만 전달, 출력하지 않음)
                 const guidanceSection = userGuidance ? 
-                    `\n🎯 분석 지침: ${userGuidance}\n` : 
-                    '\n🎯 분석 지침: 종합적이고 객관적인 기술적 분석을 제공해주세요.\n';
+                    `\n[분석 지침 - 출력하지 말고 참고만 하세요]: ${userGuidance}\n` : 
+                    '\n[분석 지침]: 종합적이고 객관적인 기술적 분석을 제공해주세요.\n';
 
                 // 답변 형식 설정 (통화별)
                 const priceFormat = currentCoin.currency === 'USD' ? '$XXX.XX' : 'X.XX억원';
@@ -2069,17 +2365,71 @@ RSI 추세 (8일): ${recentRSI.map(r => r?.toFixed(1)).join(' → ')} (${recentR
 MA20 추세: ${recentMA20[recentMA20.length-1] > recentMA20[0] ? '상승' : '하락'}
 MACD 추세: ${recentMACD.map(m => m?.toFixed(0)).join(' → ')}${guidanceSection}
 
-위 데이터와 지침을 바탕으로 다음 형식으로 답변:
+위 데이터와 지침을 바탕으로 다음 형식으로 상세하게 답변:
 
-${userGuidance ? `🎯 지침 답변: ${userGuidance}에 대한 구체적 답변
+📊 시장 현황 분석
 
-` : ''}1. 추세: (상승/하락/횡보)
-2. 신호: (매수/매도/관망) 신뢰도 XX%
-3. 지지선/저항선: ${priceFormat}, ${priceFormat}
-4. 목표가 또는 손절가: ${priceFormat}
-5. 주의사항: 한줄 설명
+<strong>현재 추세:</strong> (상승/하락/횡보) - 구체적 근거와 함께 설명
+<strong>추세 강도:</strong> (매우강함/강함/보통/약함) - RSI, MACD 등 지표 기반 판단
+<strong>시장 심리:</strong> (극도공포/공포/중립/탐욕/극도탐욕) - 현재 시장 분위기 진단
 
-${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래에 작성하세요.' : '총 5줄로 완성하세요.'}`;
+🎯 매매 신호 분석
+
+<strong>종합 신호:</strong> (강매수/매수/약매수/관망/약매도/매도/강매도) 
+<strong>신뢰도:</strong> XX% - 신뢰도 산출 근거 상세 설명
+<strong>신호 근거:</strong> 
+• 기술적 지표별 신호 (RSI, MACD, 볼린저밴드, 이동평균 등)
+• 차트 패턴 분석
+• 거래량 분석
+
+📈 핵심 가격대 분석
+
+<strong>현재가:</strong> ${formatPrice(currentPrice)}
+<strong>1차 지지선:</strong> ${priceFormat} (하락 시 첫 번째 방어선)
+<strong>2차 지지선:</strong> ${priceFormat} (강력한 지지 구간)
+<strong>1차 저항선:</strong> ${priceFormat} (상승 시 첫 번째 장벽)  
+<strong>2차 저항선:</strong> ${priceFormat} (주요 저항 구간)
+
+🎯 투자 전략
+
+<strong>매수 시나리오:</strong>
+• 진입가: ${priceFormat} 
+• 1차 목표가: ${priceFormat} (+X%)
+• 2차 목표가: ${priceFormat} (+X%)
+• 손절가: ${priceFormat} (-X%)
+
+<strong>매도 시나리오:</strong>  
+• 청산가: ${priceFormat}
+• 반등 시 재진입가: ${priceFormat}
+
+⚠️ 리스크 분석
+
+<strong>주요 위험요소:</strong>
+• 기술적 리스크: [구체적 설명]
+• 시장 리스크: [구체적 설명] 
+• 손실 제한: [구체적 방법]
+
+<strong>포지션 크기 제안:</strong> 총 자산의 X% (리스크 수준에 따라)
+
+🔮 시나리오 전망
+
+<strong>단기 전망(1-7일):</strong> [상승/하락/횡보] 확률과 예상 변동폭
+<strong>중기 전망(1-4주):</strong> [추세 지속/전환] 가능성과 핵심 변수
+<strong>장기 전망(1-3개월):</strong> [구조적 관점에서의 방향성]
+
+💡 투자자 조언
+
+<strong>초보자:</strong> [안전한 접근법]
+<strong>중급자:</strong> [균형잡힌 전략] 
+<strong>고급자:</strong> [적극적 전략]
+
+<strong>핵심 메시지:</strong> [투자 결정에 도움되는 한 줄 요약]
+
+주의사항:
+- 분석 지침은 출력하지 말고 분석 방향 참고용으로만 사용하세요
+- 각 항목을 빠뜨리지 말고 모두 구체적으로 작성하세요  
+- 수치는 정확하게 계산하여 제시하고, 근거를 명확히 설명하세요
+- 투자 권유가 아닌 기술적 분석 의견임을 전제로 작성하세요`;
 
                 let response, data;
                 
@@ -2115,10 +2465,10 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                             "Authorization": `Bearer ${OPENAI_API_KEY}`
                         },
                         body: JSON.stringify({
-                            model: "gpt-3.5-turbo",
+                            model: SELECTED_GPT_MODEL,
                             messages: [{role: "user", content: prompt}],
-                            max_tokens: 600,
-                            temperature: 0.3
+                            max_tokens: SELECTED_GPT_MODEL.includes('gpt-4') ? 4000 : 3000,
+                            temperature: 0.4
                         })
                     });
                     
@@ -2157,14 +2507,14 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 
                 if (currentCoin.type === 'crypto') {
                     // 암호화폐: 업비트 API 사용
-                const response = await fetch(`https://api.upbit.com/v1/candles/${timeframeConfig.apiPath}?market=${currentCoin.market}&count=200`);
+                const response = await fetch(`https://api.upbit.com/v1/candles/${timeframeConfig.apiPath}?market=${currentCoin.market}&count=${selectedPeriod}`);
                 if (!response.ok) throw new Error('업비트 API 호출 실패');
                 
                     candleData = await response.json();
                     reversedData = candleData.reverse(); // 시간순 정렬
                 } else if (currentCoin.type === 'stock') {
                     // 미국 주식: Yahoo Finance API 사용 (무료, API 키 불필요)
-                    const period1 = Math.floor(Date.now() / 1000) - (200 * 24 * 60 * 60); // 200일 전
+                    const period1 = Math.floor(Date.now() / 1000) - (selectedPeriod * 24 * 60 * 60); // 선택된 기간 전
                     const period2 = Math.floor(Date.now() / 1000); // 현재
                     
                     const interval = selectedTimeframe === '5m' ? '5m' : 
@@ -2224,7 +2574,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                         const basePrice = latestBasePrices[currentCoin.symbol] || 150;
                         
                         // 실제 가격 움직임과 유사한 패턴 생성
-                        reversedData = Array.from({length: 200}, (_, i) => {
+                        reversedData = Array.from({length: selectedPeriod}, (_, i) => {
                             // 현실적인 가격 변동 패턴 (실제 주식처럼)
                             const trend = Math.sin(i * 0.02) * 0.1; // 장기 트렌드
                             const noise = (Math.random() - 0.5) * 0.03; // 노이즈
@@ -2234,7 +2584,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                             const price = basePrice * priceMultiplier;
                             
                             return {
-                                candle_date_time_kst: new Date(Date.now() - (200 - i) * 24 * 60 * 60 * 1000).toISOString(),
+                                candle_date_time_kst: new Date(Date.now() - (selectedPeriod - i) * 24 * 60 * 60 * 1000).toISOString(),
                                 trade_price: Math.max(price * 0.5, price), // 최소값 보장
                                 high_price: price * (1 + Math.random() * 0.02),
                                 low_price: price * (1 - Math.random() * 0.02),
@@ -2431,6 +2781,13 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     signalListElement.textContent = '현재 명확한 신호 없음';
                 }
                 
+                // 현재 선택된 코인의 신호를 전역 저장소에 업데이트
+                allCoinSignals[selectedCoin] = {
+                    signal: analysis.signal,
+                    confidence: analysis.confidence,
+                    lastUpdate: new Date().toISOString()
+                };
+                
                 // 현재 선택된 종목의 버튼 신호 텍스트를 즉시 동기화
                 updateCurrentCoinButtonColor(analysis);
                 
@@ -2466,12 +2823,238 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 };
                 
                 const currentTf = timeframeInfo[selectedTimeframe];
+                const periodDesc = selectedPeriod >= 1000 ? '장기' : selectedPeriod >= 500 ? '중기' : '단기';
                 document.getElementById('status').textContent = 
-                    `마지막 ${currentTf.name} 분석: ${new Date().toLocaleTimeString('ko-KR')} (${autoUpdate ? '자동' : '수동'})`;
+                    `${currentTf.name} ${selectedPeriod}개 (${periodDesc}) 분석: ${new Date().toLocaleTimeString('ko-KR')} (${autoUpdate ? '자동' : '수동'})`;
                 
             } catch (error) {
                 console.error('데이터 가져오기 오류:', error);
                 document.getElementById('status').textContent = `오류: ${error.message}`;
+            }
+        }
+        
+        // 추천 지침 설정 함수
+        function setGuidance(type) {
+            const guidanceInput = document.getElementById('guidanceInput');
+            let guidanceText = '';
+            
+            const guidanceTemplates = {
+                'conservative': '🛡️ 보수적 관점에서 리스크를 중점적으로 분석해주세요.\n\n분석 요청사항:\n- 주요 하락 리스크와 위험 요소 식별\n- 안전한 진입점과 확실한 손절선 제시\n- 큰 손실을 피할 수 있는 전략 제안\n- 시장 변동성에 대한 방어적 접근법',
+                
+                'aggressive': '⚡ 공격적 관점에서 수익 기회를 중점적으로 분석해주세요.\n\n분석 요청사항:\n- 높은 수익률 달성을 위한 전략\n- 적극적인 진입/추가매수 타이밍\n- 상승 모멘텀을 활용한 목표가 설정\n- 빠른 수익 실현을 위한 단기 전술',
+                
+                'balanced': '⚖️ 균형적이고 중립적인 관점에서 종합적으로 분석해주세요.\n\n분석 요청사항:\n- 상승/하락 시나리오 균형적 검토\n- 리스크와 수익의 적절한 균형점\n- 다양한 투자 관점의 종합적 고려\n- 객관적이고 편향되지 않은 분석',
+                
+                'shortterm': '🔥 단기 매매 관점에서 분석해주세요.\n\n분석 요청사항:\n- 1일~1주일 내 진입/청산 타이밍\n- 단기 차트 패턴과 지표 활용\n- 빠른 수익 실현을 위한 전략\n- 데이트레이딩에 적합한 구간 식별',
+                
+                'swingterm': '📈 스윙 트레이딩 관점에서 분석해주세요.\n\n분석 요청사항:\n- 1주일~1개월 중기 매매 전략\n- 주요 파동과 추세 전환점 분석\n- 스윙 고점/저점 예측 및 활용법\n- 중기 리스크 관리 방안',
+                
+                'longterm': '💎 장기 투자 관점에서 분석해주세요.\n\n분석 요청사항:\n- 3개월 이상 장기 보유 전략\n- 펀더멘털과 기술적 분석 조합\n- 장기 상승 추세와 목표가 분석\n- 장기 투자자를 위한 포트폴리오 제안',
+                
+                'technical': '📊 순수 기술적 분석에 집중해서 분석해주세요.\n\n분석 요청사항:\n- RSI, MACD, 볼린저밴드 등 지표 해석\n- 이동평균선 배열과 지지/저항선\n- 차트 패턴과 기술적 신호 종합\n- 수치와 데이터 기반 객관적 분석',
+                
+                'pattern': '🔄 차트 패턴 분석에 중점을 두고 분석해주세요.\n\n분석 요청사항:\n- 삼각형, 깃발, 헤드앤숄더 등 패턴 식별\n- 과거 유사 패턴과의 비교 분석\n- 패턴 완성도와 성공 확률 평가\n- 패턴 기반 목표가와 손절선 제시',
+                
+                'volume': '📢 거래량 분석을 중심으로 분석해주세요.\n\n분석 요청사항:\n- 거래량과 가격의 상관관계 분석\n- 거래량 급증/감소 구간의 의미\n- 기관/개인 투자자 동향 추정\n- 거래량 기반 추세 확인 및 전망',
+                
+                'risk': '⚠️ 위험 요소와 리스크 관리에 집중해서 분석해주세요.\n\n분석 요청사항:\n- 주요 하락 리스크와 위험 신호\n- 최악의 시나리오와 대응 방안\n- 적절한 손절선과 리스크 관리법\n- 포지션 크기와 자금 관리 조언',
+                
+                'scenario': '🎭 다양한 시나리오 분석을 제시해주세요.\n\n분석 요청사항:\n- 상승/하락/횡보 시나리오별 전략\n- 각 시나리오의 발생 확률과 대응법\n- 시장 상황 변화에 따른 대안 제시\n- 시나리오별 목표가와 손절선',
+                
+                'comparison': '📋 과거 데이터와 비교 분석해주세요.\n\n분석 요청사항:\n- 과거 비슷한 차트 패턴과의 비교\n- 동일 기간 다른 자산과의 상대적 분석\n- 역사적 데이터 기반 확률적 전망\n- 과거 성공/실패 사례를 통한 교훈'
+            };
+            
+            if (type === 'clear') {
+                guidanceInput.value = '';
+                return;
+            }
+            
+            guidanceText = guidanceTemplates[type] || '';
+            
+            // 기존 텍스트가 있으면 추가, 없으면 새로 입력
+            if (guidanceInput.value.trim()) {
+                // 기존 텍스트와 구분하기 위해 줄바꿈 추가
+                guidanceInput.value += '\n\n' + '═'.repeat(40) + '\n\n' + guidanceText;
+            } else {
+                guidanceInput.value = guidanceText;
+            }
+            
+            // 텍스트 영역 맨 아래로 스크롤
+            guidanceInput.scrollTop = guidanceInput.scrollHeight;
+            
+            // 텍스트 영역에 포커스 (사용자가 바로 수정할 수 있도록)
+            guidanceInput.focus();
+        }
+        
+        // PDF 다운로드 함수 (html2canvas 사용)
+        async function downloadPDF() {
+            const pdfBtn = document.getElementById('pdfBtn');
+            const gptContent = document.getElementById('gptSignal');
+            
+            if (!gptContent || gptContent.textContent.includes('AI 분석을 받으려면')) {
+                alert('먼저 AI 분석을 실행해주세요!');
+                return;
+            }
+            
+            try {
+                // 버튼 비활성화 및 로딩 표시
+                pdfBtn.disabled = true;
+                pdfBtn.innerHTML = '<span>⏳</span><span>생성중</span>';
+                
+                const currentCoinInfo = coinInfo[selectedCoin];
+                const currentTfInfo = timeframeInfo[selectedTimeframe];
+                const periodDesc = selectedPeriod >= 1000 ? '장기' : selectedPeriod >= 500 ? '중기' : '단기';
+                const currentDate = new Date().toLocaleDateString('ko-KR');
+                const currentTime = new Date().toLocaleTimeString('ko-KR');
+                
+                // PDF를 위한 임시 요소 생성
+                const reportContainer = document.createElement('div');
+                reportContainer.style.cssText = `
+                    position: fixed;
+                    top: -9999px;
+                    left: 0;
+                    width: 794px;
+                    background: white;
+                    color: black;
+                    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+                    padding: 40px;
+                    box-sizing: border-box;
+                `;
+                
+                // 현재가 및 기술적 지표 정보 안전하게 가져오기
+                const currentPrice = latestAnalysisData?.currentPrice || 0;
+                const currentRSI = latestAnalysisData?.currentRSI;
+                const currentMACD = latestAnalysisData?.currentMACD;
+                
+                const signalElement = document.getElementById('signal');
+                const confidenceElement = document.getElementById('confidence');
+                const currentSignal = signalElement ? signalElement.textContent.trim() : '분석중';
+                const currentConfidence = confidenceElement ? confidenceElement.textContent.trim() : '계산중';
+                
+                // HTML 콘텐츠 생성 (페이지 분할 고려)
+                const reportHTML = `
+                    <div style="margin-bottom: 30px; border-bottom: 3px solid #333; padding-bottom: 20px; page-break-inside: avoid;">
+                        <h1 style="margin: 0; font-size: 24px; color: #2c3e50; margin-bottom: 10px;">
+                            ${currentCoinInfo.icon} ${currentCoinInfo.name} (${currentCoinInfo.symbol}) 투자 분석 리포트
+                        </h1>
+                        <div style="font-size: 14px; color: #666; margin-bottom: 15px;">
+                            📊 ${currentTfInfo.name} ${selectedPeriod}개 (${periodDesc}) 분석 | 생성일: ${currentDate} ${currentTime}
+                        </div>
+                        <div style="display: flex; gap: 30px; font-size: 16px; font-weight: bold;">
+                            <div>💰 현재가: ${currentPrice > 0 ? formatPrice(currentPrice) : '데이터 로딩중'}</div>
+                            <div>📊 신호: ${currentSignal} (${currentConfidence}%)</div>
+                        </div>
+                        <div style="font-size: 14px; color: #666; margin-top: 10px; margin-bottom: 30px;">
+                            RSI: ${currentRSI ? currentRSI.toFixed(1) : 'N/A'} | MACD: ${currentMACD ? currentMACD.toFixed(0) : 'N/A'}
+                        </div>
+                    </div>
+                    
+                    <div style="line-height: 1.8; font-size: 14px; color: #333; margin-bottom: 60px; padding-bottom: 30px;">
+                        ${(() => {
+                            // AI 분석 내용을 정리하여 PDF에 적합하게 변환 (헤더 중복 제거)
+                            let cleanContent = gptContent.innerHTML;
+                            
+                            // 1. 먼저 헤더 영역 찾아서 제거 (border-bottom이 있는 div와 그 내용)
+                            const headerRegex = /<div[^>]*border-bottom[^>]*>[\s\S]*?<\/div>/g;
+                            cleanContent = cleanContent.replace(headerRegex, '');
+                            
+                            // 2. 시장 현황 분석이 시작되는 지점을 찾아서 그 이전 모든 내용 제거
+                            const analysisStartIndex = cleanContent.search(/시장\s*현황\s*분석|📊\s*시장/i);
+                            if (analysisStartIndex > 0) {
+                                cleanContent = cleanContent.substring(analysisStartIndex);
+                            }
+                            
+                            // 3. 나머지 정리 작업
+                            cleanContent = cleanContent
+                                .replace(/style="[^"]*"/g, '') // 모든 스타일 제거
+                                .replace(/class="[^"]*"/g, '') // 모든 클래스 제거
+                                .replace(/color:\s*[^;]*;?/g, '') // 색상 속성 제거
+                                .replace(/background[^;]*;?/g, '') // 배경 속성 제거
+                                .replace(/<div[^>]*>/g, '<div style="margin-bottom: 15px;">') // div 태그에 여백 추가
+                                .replace(/<strong>/g, '<b>') // strong을 b로 변경
+                                .replace(/<\/strong>/g, '</b>') // /strong을 /b로 변경
+                                .replace(/<div style="margin-bottom: 15px;">/g, '<div style="margin-bottom: 20px; page-break-inside: avoid;">') // 섹션별 페이지 브레이크 방지
+                                .replace(/^[\s\n]+/g, '') // 시작 공백 제거
+                                .trim()
+                            return cleanContent;
+                        })()}
+                    </div>
+                    
+                    <div style="margin-top: 60px; padding-top: 20px; border-top: 2px solid #eee; font-size: 12px; color: #666; font-style: italic; page-break-inside: avoid;">
+                        <div style="margin-bottom: 8px;">※ 본 분석은 투자 권유가 아닌 기술적 분석 의견입니다.</div>
+                        <div style="margin-bottom: 8px;">※ 투자 결정은 본인 책임하에 신중히 판단하시기 바랍니다.</div>
+                        <div>※ 암호화폐 투자는 높은 변동성과 리스크를 동반합니다.</div>
+                    </div>
+                `;
+                
+                reportContainer.innerHTML = reportHTML;
+                document.body.appendChild(reportContainer);
+                
+                // html2canvas로 캡처
+                const canvas = await html2canvas(reportContainer, {
+                    scale: 2, // 고해상도
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    width: 794,
+                    height: null
+                });
+                
+                // 임시 요소 제거
+                document.body.removeChild(reportContainer);
+                
+                // PDF 생성 (안전한 여백 적용)
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdfWidth = 210; // A4 width in mm
+                const pdfHeight = 297; // A4 height in mm
+                const margin = 15; // 좌우상 여백
+                const bottomMargin = 35; // 하단 여백 (텍스트 잘림 방지)
+                
+                const imgWidth = pdfWidth - (margin * 2); // 좌우 여백 제외
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                const maxPageHeight = pdfHeight - margin - bottomMargin; // 실제 사용 가능한 높이
+                
+                let position = 0;
+                let pageCount = 0;
+                
+                while (position < imgHeight) {
+                    // 새 페이지 추가 (첫 페이지 제외)
+                    if (pageCount > 0) {
+                        pdf.addPage();
+                    }
+                    
+                    // 현재 페이지에서 표시할 높이 계산
+                    const remainingHeight = imgHeight - position;
+                    const currentPageHeight = Math.min(remainingHeight, maxPageHeight);
+                    
+                    // 이미지 위치 계산 (음수로 설정하여 원하는 부분만 표시)
+                    const yPosition = margin - position;
+                    
+                    pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
+                    
+                    // 다음 페이지를 위한 위치 업데이트
+                    position += maxPageHeight;
+                    pageCount++;
+                }
+                
+                // 파일명 생성
+                const fileName = `${currentCoinInfo.name}_${currentTfInfo.name}_분석리포트_${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}.pdf`;
+                
+                // PDF 다운로드
+                pdf.save(fileName);
+                
+                // 성공 메시지
+                alert(`📄 PDF 리포트가 생성되었습니다!\n파일명: ${fileName}`);
+                
+            } catch (error) {
+                console.error('PDF 생성 오류:', error);
+                alert('PDF 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
+                // 버튼 복원
+                pdfBtn.disabled = false;
+                pdfBtn.innerHTML = '<span>📄</span><span>PDF</span>';
             }
         }
         
@@ -2492,17 +3075,46 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 analyzeBtn.innerHTML = '<span class="loading"></span><span>분석 중...</span>';
                 
                 // GPT 분석 시작 메시지
-                gptSignalDiv.innerHTML = '🤖 <strong>AI가 고급 분석 중입니다...</strong><br><br><span class="loading"></span> GPT-3.5가 최신 데이터를 분석하고 있습니다...<br>📊 15개 가격 데이터 + 8개 기술 지표 종합 분석 중';
+                const loadingModelName = SELECTED_GPT_MODEL.replace('gpt-', 'GPT-').replace('-turbo', ' Turbo').replace('-mini', ' Mini');
+                gptSignalDiv.innerHTML = `🤖 <strong>AI가 전문적인 상세 분석 중입니다...</strong><br><br><span class="loading"></span> ${loadingModelName}이 다음 항목들을 종합 분석 중:<br>📊 시장 현황 → 매매 신호 → 가격대 분석 → 투자 전략 → 리스크 분석 → 시나리오 전망 → 투자자 조언<br><br>⏳ 상세한 분석이므로 조금 더 시간이 걸릴 수 있습니다...`;
                 
                 // GPT API 호출 (전체 분석 데이터 전달)
                 const gptAnalysis = await getGPTSignal(latestAnalysisData);
                 
-                // 결과 표시
-                gptSignalDiv.innerHTML = gptAnalysis.replace(/\n/g, '<br>');
+                // 결과 표시 (종목명과 모델 정보 포함)
+                const resultModelName = SELECTED_GPT_MODEL.replace('gpt-', 'GPT-').replace('-turbo', ' Turbo').replace('-mini', ' Mini');
+                const currentCoinInfo = coinInfo[selectedCoin];
+                const currentTfInfo = timeframeInfo[selectedTimeframe];
+                const periodDesc = selectedPeriod >= 1000 ? '장기' : selectedPeriod >= 500 ? '중기' : '단기';
+                
+                const analysisWithHeader = `
+                <div style="border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="font-size: 1.1em; font-weight: bold; color: white;">
+                            ${currentCoinInfo.icon} ${currentCoinInfo.name} (${currentCoinInfo.symbol}) 투자 분석 리포트
+                        </div>
+                        <div style="font-size: 0.85em; color: rgba(255,255,255,0.7);">
+                            🤖 ${resultModelName} | ⏰ ${new Date().toLocaleTimeString('ko-KR')}
+                        </div>
+                    </div>
+                                         <div style="font-size: 0.9em; color: rgba(255,255,255,0.8);">
+                         📊 ${currentTfInfo.name} ${selectedPeriod}개 (${periodDesc}) | 💰 현재가: ${latestAnalysisData?.currentPrice > 0 ? formatPrice(latestAnalysisData.currentPrice) : '데이터 로딩중'}
+                     </div>
+                </div>
+                ${gptAnalysis}`;
+                
+                gptSignalDiv.innerHTML = analysisWithHeader.replace(/\n/g, '<br>');
                 
                 // 버튼 다시 활성화
                 analyzeBtn.disabled = false;
                 analyzeBtn.innerHTML = '<span>🔍</span><span>분석</span>';
+                
+                // PDF 다운로드 버튼 활성화
+                const pdfBtn = document.getElementById('pdfBtn');
+                if (pdfBtn) {
+                    pdfBtn.disabled = false;
+                    pdfBtn.style.opacity = '1';
+                }
                 
             } catch (error) {
                 console.error('GPT 분석 오류:', error);
@@ -2543,7 +3155,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             }
         }
         
-        // 종목별 신호 분석 (간소화된 버전)
+        // 종목별 신호 분석 (백그라운드 업데이트용)
         async function analyzeSymbolSignal(symbol) {
             try {
                 const coin = coinInfo[symbol];
@@ -2552,19 +3164,19 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 let response, data;
                 
                 if (coin.type === 'crypto') {
-                    // 암호화폐: 업비트 API
-                    response = await fetch(`https://api.upbit.com/v1/candles/days?market=${coin.market}&count=50`);
+                    // 암호화폐: 업비트 API (100개 캔들로 더 정확한 분석)
+                    response = await fetch(`https://api.upbit.com/v1/candles/days?market=${coin.market}&count=100`);
                     if (!response.ok) throw new Error('API 호출 실패');
                     data = await response.json();
                     data = data.reverse();
                 } else {
-                                         // 주식: 2024년 12월 실제 시세 기반 모의 데이터
-                     const basePrices = {
-                                         'XRP': 3000, 'DOGE': 500, 'SOL': 200000, 'TRUMP': 50000
-                     };
+                    // 주식: 2024년 12월 실제 시세 기반 모의 데이터
+                    const basePrices = {
+                        'XRP': 3000, 'DOGE': 500, 'SOL': 200000, 'TRUMP': 50000
+                    };
                     const basePrice = basePrices[symbol] || 150;
                     
-                    data = Array.from({length: 50}, (_, i) => ({
+                    data = Array.from({length: 100}, (_, i) => ({
                         trade_price: basePrice + Math.sin(i * 0.1) * 20 + Math.random() * 10,
                         high_price: 0, low_price: 0,
                         candle_acc_trade_volume: Math.floor(Math.random() * 1000000)
@@ -2608,7 +3220,18 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                     divergence: divergence
                 };
                 
-                return analyzeAdvancedSignal(analysisData);
+                const result = analyzeAdvancedSignal(analysisData);
+                
+                // 전역 신호 저장소에 업데이트
+                allCoinSignals[symbol] = {
+                    signal: result.signal,
+                    confidence: result.confidence,
+                    lastUpdate: new Date().toISOString()
+                };
+                
+                console.log(`✅ ${symbol} 백그라운드 신호 업데이트: ${result.signal} (${result.confidence}%)`);
+                
+                return result;
                 
             } catch (error) {
                 console.warn(`${symbol} 신호 분석 실패:`, error);
@@ -2642,14 +3265,58 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             }
         }
         
-        // 모든 종목의 버튼 신호 텍스트 업데이트 (현재 선택된 종목 제외)
-        async function updateAllSignalColors() {
+        // 모든 코인의 신호를 백그라운드에서 업데이트
+        async function updateAllCoinsInBackground() {
+            console.log('🔄 모든 코인 백그라운드 신호 업데이트 시작...');
+            
+            // 상태 표시 업데이트
+            const statusEl = document.getElementById('status');
+            const originalStatus = statusEl.textContent;
+            statusEl.textContent = originalStatus + ' (🔄 백그라운드 업데이트 중...)';
+            
+            // 현재 선택된 코인 제외 (이미 메인 차트에서 업데이트됨)
             const symbols = Object.keys(coinInfo).filter(symbol => symbol !== selectedCoin);
+            let completed = 0;
             
             for (const symbol of symbols) {
                 try {
-                    const analysis = await analyzeSymbolSignal(symbol);
+                    // 백그라운드에서 각 코인 분석
+                    await analyzeSymbolSignal(symbol);
+                    completed++;
+                    
+                    // 진행 상황 표시
+                    statusEl.textContent = `${originalStatus} (🔄 ${completed}/${symbols.length} 완료)`;
+                    
+                    // API 호출 간격 (업비트 API 제한 고려)
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                } catch (error) {
+                    console.warn(`${symbol} 백그라운드 분석 실패:`, error);
+                    completed++;
+                }
+            }
+            
+            // 모든 분석 완료 후 버튼 UI 업데이트
+            updateAllCoinButtonColors();
+            
+            // 상태 복원
+            statusEl.textContent = originalStatus;
+            
+            console.log('✅ 모든 코인 백그라운드 업데이트 완료');
+            
+            // 완료 메시지 잠시 표시
+            statusEl.textContent = originalStatus + ' (✅ 모든 종목 신호 업데이트 완료)';
+            setTimeout(() => {
+                statusEl.textContent = originalStatus;
+            }, 3000);
+        }
+        
+        // 모든 코인 버튼의 신호 텍스트 업데이트 (UI만)
+        function updateAllCoinButtonColors() {
+            Object.keys(coinInfo).forEach(symbol => {
+                if (allCoinSignals[symbol]) {
                     const btn = document.querySelector(`[data-coin="${symbol}"]`);
+                    const signalData = allCoinSignals[symbol];
                     
                     if (btn) {
                         // 기존 신호 클래스 제거
@@ -2657,28 +3324,18 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                                            'signal-hold', 'signal-weak-sell', 'signal-sell', 'signal-strong-sell');
                         
                         // 새로운 신호 클래스 추가 (CSS에서 자동으로 텍스트 표시)
-                        const signalClass = getSignalClass(analysis.signal, analysis.confidence);
+                        const signalClass = getSignalClass(signalData.signal, signalData.confidence);
                         btn.classList.add(signalClass);
                         
                         // 툴팁에 신호 정보 추가
-                        const originalTitle = btn.getAttribute('data-original-tooltip') || btn.title || '';
-                        const signalInfo = `\n\n📊 현재 신호: ${analysis.signal} (${analysis.confidence}%)`;
-                        btn.title = originalTitle.replace(/\n\n📊 현재 신호:.*/, '') + signalInfo;
+                        const coinName = coinInfo[symbol].name;
+                        const updateTime = new Date(signalData.lastUpdate).toLocaleTimeString('ko-KR');
+                        btn.title = `${coinName}\n📊 신호: ${signalData.signal} (${signalData.confidence}%)\n⏰ 업데이트: ${updateTime}`;
                         
-                        if (!btn.getAttribute('data-original-tooltip')) {
-                            btn.setAttribute('data-original-tooltip', originalTitle);
-                        }
+                        console.log(`🔄 ${symbol} 버튼 업데이트: ${signalClass}`);
                     }
-                    
-                    // API 호출 간격을 두어 과부하 방지
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                    
-                } catch (error) {
-                    console.warn(`${symbol} 신호 텍스트 업데이트 실패:`, error);
                 }
-            }
-            
-            console.log('✅ 모든 종목 신호 텍스트 업데이트 완료');
+            });
         }
         
         // 신호 텍스트 업데이트 간격 (5분마다)
@@ -2686,13 +3343,74 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
         
         // API 키 관리 함수들
         function openApiModal() {
-            document.getElementById('apiModal').style.display = 'block';
+            const modal = document.getElementById('apiModal');
+            const content = modal.querySelector('.api-modal-content');
             
-            // 저장된 API 키가 있으면 표시 (마스킹)
-            const savedKey = localStorage.getItem('openai_api_key');
-            if (savedKey) {
-                document.getElementById('apiKeyInput').value = savedKey;
-            }
+            // 저장된 API 키 가져오기
+            const savedKey = localStorage.getItem('openai_api_key') || '';
+            
+            content.innerHTML = `
+                <span class="api-close" onclick="closeApiModal()">&times;</span>
+                <h2 style="margin-top: 0; color: #2c3e50;">🤖 OpenAI API 설정</h2>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4 style="margin: 0 0 10px 0; color: #495057;">🔑 API 키</h4>
+                    <input type="password" id="apiKeyInput" value="${savedKey}" 
+                           placeholder="sk-..." style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-family: monospace; box-sizing: border-box;">
+                    <small style="color: #6c757d; display: block; margin-top: 5px;">
+                        <a href="https://platform.openai.com/api-keys" target="_blank" style="color: #667eea;">OpenAI 플랫폼</a>에서 발급받으세요
+                    </small>
+                </div>
+                
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4 style="margin: 0 0 10px 0; color: #1976d2;">🧠 AI 모델 선택</h4>
+                    <select id="modelSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        <option value="gpt-4o-mini" ${SELECTED_GPT_MODEL === 'gpt-4o-mini' ? 'selected' : ''}>
+                            GPT-4o Mini (빠름, 저렴) - 추천
+                        </option>
+                        <option value="gpt-4o" ${SELECTED_GPT_MODEL === 'gpt-4o' ? 'selected' : ''}>
+                            GPT-4o (고성능, 최신) - 최고품질
+                        </option>
+                        <option value="gpt-4-turbo" ${SELECTED_GPT_MODEL === 'gpt-4-turbo' ? 'selected' : ''}>
+                            GPT-4 Turbo (균형잡힌 성능)
+                        </option>
+                        <option value="gpt-3.5-turbo" ${SELECTED_GPT_MODEL === 'gpt-3.5-turbo' ? 'selected' : ''}>
+                            GPT-3.5 Turbo (경제적)
+                        </option>
+                    </select>
+                    <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                        <div style="margin: 5px 0;"><strong>💰 비용 (토큰당):</strong></div>
+                        <div style="margin: 2px 0;">• GPT-4o Mini: 가장 저렴 (추천)</div>
+                        <div style="margin: 2px 0;">• GPT-4o: 중간 가격, 최고 품질</div>
+                        <div style="margin: 2px 0;">• GPT-3.5: 가장 저렴, 기본 품질</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button onclick="saveApiKey()" style="background: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; margin-right: 10px;">
+                        💾 저장
+                    </button>
+                    <button onclick="testApiKey()" style="background: #2196F3; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; margin-right: 10px;">
+                        🔍 테스트
+                    </button>
+                    <button onclick="clearApiKey()" style="background: #f44336; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                        🗑️ 삭제
+                    </button>
+                </div>
+                
+                <div id="apiStatus" class="api-status" style="display: none; margin-top: 15px; padding: 10px; border-radius: 5px; font-size: 14px;"></div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px;">
+                    <small style="color: #856404;">
+                        ⚠️ <strong>주의사항:</strong><br>
+                        • API 키를 다른 사람과 공유하지 마세요<br>
+                        • GPT-4 모델은 GPT-3.5보다 비싸지만 훨씬 정확합니다<br>
+                        • 사용량에 따라 OpenAI 요금이 부과됩니다
+                    </small>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
         }
         
         function closeApiModal() {
@@ -2701,7 +3419,7 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
         
         function saveApiKey() {
             const apiKey = document.getElementById('apiKeyInput').value.trim();
-            const statusDiv = document.getElementById('apiStatus');
+            const selectedModel = document.getElementById('modelSelect').value;
             
             if (!apiKey) {
                 showApiStatus('API 키를 입력해주세요.', 'error');
@@ -2715,11 +3433,13 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
                 return;
             }
             
-            // API 키 저장
+            // API 키와 모델 저장
             localStorage.setItem('openai_api_key', apiKey);
+            localStorage.setItem('selected_gpt_model', selectedModel);
             OPENAI_API_KEY = apiKey;
+            SELECTED_GPT_MODEL = selectedModel;
             
-            showApiStatus('✅ API 키가 성공적으로 저장되었습니다!', 'success');
+            showApiStatus(`✅ API 키와 모델(${selectedModel})이 성공적으로 저장되었습니다!`, 'success');
             updateApiKeyButtonStatus();
         }
         
@@ -2752,11 +3472,14 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
         }
         
         function clearApiKey() {
-            if (confirm('저장된 API 키를 삭제하시겠습니까?')) {
+            if (confirm('저장된 API 키와 모델 설정을 삭제하시겠습니까?')) {
                 localStorage.removeItem('openai_api_key');
+                localStorage.removeItem('selected_gpt_model');
                 OPENAI_API_KEY = "";
+                SELECTED_GPT_MODEL = 'gpt-4o-mini';
                 document.getElementById('apiKeyInput').value = '';
-                showApiStatus('🗑️ API 키가 삭제되었습니다.', 'success');
+                document.getElementById('modelSelect').value = 'gpt-4o-mini';
+                showApiStatus('🗑️ API 키와 모델 설정이 삭제되었습니다.', 'success');
                 updateApiKeyButtonStatus();
             }
         }
@@ -2770,16 +3493,24 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
         
         function loadApiKey() {
             const savedKey = localStorage.getItem('openai_api_key');
+            const savedModel = localStorage.getItem('selected_gpt_model');
+            
             if (savedKey) {
                 OPENAI_API_KEY = savedKey;
-                updateApiKeyButtonStatus();
             }
+            
+            if (savedModel) {
+                SELECTED_GPT_MODEL = savedModel;
+            }
+            
+            updateApiKeyButtonStatus();
         }
         
         function updateApiKeyButtonStatus() {
             const btn = document.getElementById('apiKeyBtn');
             if (OPENAI_API_KEY) {
-                btn.textContent = '🔑 API 키 설정됨';
+                const buttonModelName = SELECTED_GPT_MODEL.replace('gpt-', 'GPT-').replace('-turbo', ' Turbo').replace('-mini', ' Mini');
+                btn.textContent = `🤖 ${buttonModelName} 연결됨`;
                 btn.classList.add('configured');
             } else {
                 btn.textContent = '🔑 API 키 설정';
@@ -2805,12 +3536,18 @@ ${userGuidance ? '지침에 대한 답변을 맨 위에, 기본 분석을 아래
             const tfInfo = timeframeInfo[selectedTimeframe];
             updateInterval = setInterval(draw, tfInfo.updateInterval);
             
-            // 신호 텍스트 초기 업데이트 (3초 후 시작)
+            // 백그라운드 신호 업데이트 시작 (5초 후 첫 실행)
             setTimeout(() => {
-                updateAllSignalColors();
-                // 5분마다 신호 텍스트 업데이트
-                signalUpdateInterval = setInterval(updateAllSignalColors, 5 * 60 * 1000);
-            }, 3000);
+                updateAllCoinsInBackground();
+                // 10분마다 모든 코인 백그라운드 업데이트
+                signalUpdateInterval = setInterval(updateAllCoinsInBackground, 10 * 60 * 1000);
+            }, 5000);
+            
+            // 페이지 로드 완료 후 즉시 모든 코인 버튼 초기화
+            setTimeout(() => {
+                // 저장된 신호가 있으면 버튼에 반영
+                updateAllCoinButtonColors();
+            }, 1000);
         };
 
         // Alpha Vantage API 키 설정
